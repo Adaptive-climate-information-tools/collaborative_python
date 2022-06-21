@@ -1,7 +1,7 @@
 #Step 1: Start with import statements (this tells python which packages 
 #you will actually use in your code and names 
 #them, so we will call xarray : xr)
-import sys
+#import sys
 import xarray as xr
 import pandas as pd
 import numpy as np
@@ -10,6 +10,7 @@ from matplotlib import pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature
 #Import for Step 9
+#**To run this code you will need to conda install geopandas and rioxarray
 import geopandas as gpd
 from shapely.geometry import mapping
 
@@ -143,7 +144,7 @@ da_mam.plot.contourf(ax=ax,transform=ccrs.PlateCarree(),alpha=0.8,vmin=0,vmax=4,
 lon, lat = np.meshgrid(xrst_mam.lon,xrst_mam.lat)
 xrst_p = ax.scatter(x=lon,y=lat,s=60,c=xrst_mam,vmin=0,vmax=4,
                     edgecolors=None,transform=ccrs.PlateCarree())
-plt.colorbar(xrst_p,label='MAM Station xarray (mm/day)')
+plt.colorbar(xrst_p,label='MAM Station xarray (mm/day)',ax=ax)
 #For a scatter from the dataframe we need to select the index values for lat and lon
 #Because there are multiple indices (time, lat, lon) we need to use get_level_values
 #because these indices are called values
@@ -151,7 +152,7 @@ newst_p = ax.scatter(x=newst_mam.index.get_level_values('lon').values,
                      y=newst_mam.index.get_level_values('lat').values,
                      s=60,c=newst_mam['PRECIP'].values,vmin=0,vmax=4,
                      edgecolors='black',transform=ccrs.PlateCarree())
-plt.colorbar(newst_p,label='MAM Station dataframe (mm/day)')
+plt.colorbar(newst_p,label='MAM Station dataframe (mm/day)',ax=ax)
 #*** You can't see both scatters because they are on top of each other - comment each one
 #    out at a time and plot to see if you can see a difference in them
 #Now we add all the cartopy information we did last time and add in some gridlines so it
@@ -190,7 +191,7 @@ da.mean('time').plot.pcolormesh(cmap=plt.cm.viridis,ax=ax,transform=ccrs.PlateCa
 lon, lat = np.meshgrid(diff_st.lon,diff_st.lat)
 diffp = ax.scatter(x=lon,y=lat,s=60,c=diff_st,vmin=-1.5,vmax=1.5,
                    cmap=plt.cm.PRGn,edgecolors=None,transform=ccrs.PlateCarree())
-plt.colorbar(diffp,label='Mean CHIRPS-station (mm/day)')
+plt.colorbar(diffp,label='Mean CHIRPS-station (mm/day)',ax=ax)
 ax.coastlines()
 ax.add_feature(cartopy.feature.BORDERS)
 ax.add_feature(cartopy.feature.RIVERS)

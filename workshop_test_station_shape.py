@@ -30,7 +30,7 @@ def trim_all_columns(df):
 #(edit the path to the file correctly depending on where you saved it) 
 #and select the variable ‘precip’. Now we have a data array called da and
 #we can print it to see what we have:
-da = xr.open_dataarray("/Users/ellendyer/Documents/Work/REACH/Workshop_conda_python/workshop_chirps.nc")
+da = xr.open_dataarray("./workshop_chirps.nc")
 #convert from mm/month to mm/day
 da = da/da.time.dt.daysinmonth
 da = da.sel(time=slice('1996-01-01','2010-12-31'))
@@ -47,10 +47,10 @@ chirps_reg = da.sel(lat=slice(7,12),lon=slice(36,40),time=slice('1990-01-01','20
 ##Step 3: Read in station data from NMA
 
 #You can read in spreadsheet station data as a .csv file here:
-st = pd.read_csv("/Users/ellendyer/Desktop/NMA_Tana_basin.csv",header=0,index_col=False)
+st = pd.read_csv("./NMA_Tana_basin.csv",header=0,index_col=False)
 
 #OR you can read in spreadsheet station data as an excel file here:
-# st = pd.read_excel("/Users/ellendyer/Desktop/NMA_Tana_basin.xlsx",header=0,index_col=False,sheet_name='data')
+# st = pd.read_excel("./NMA_Tana_basin.xlsx",header=0,index_col=False,sheet_name='data')
 #IF you read in an excel file you need to make sure all the column names are strings
 # st.columns = st.columns.map(str)
 
@@ -99,6 +99,7 @@ newst = newst.astype({'PRECIP': 'float64'})
 newst_toxr = newst.set_index(['time','lat','lon'])
 #Select same date range as chirps
 newst_toxr = newst_toxr.loc['1996-01-01':'2010-12-31']
+print(newst_toxr.head())
 
 #%%
 ## Step 5: Create an xarray or output the dataframe to a file
@@ -111,9 +112,10 @@ xrst = xrst.dropna('lon','all')
 #xrst.mean('time', skipna=True).plot()
 #plt.show()
 #plt.clf()
+xrst.to_netcdf('./files/out.nc')
 #We can also output our dataframe in this new
 #organisation to a csv file (other formats available)
-newst.to_csv('/Users/ellendyer/Documents/Work/REACH/Workshop_conda_python/out.csv')
+newst.to_csv('./files/out.csv')
 
 
 #%%
@@ -167,7 +169,7 @@ gl.right_labels = False
 # for extent the order is  [West,East,South,North]
 ax.set_extent([36, 38.5, 9, 13.5])
 plt.title('Station scatter (pandas and xarray) \n over CHIRPS rainfall contours \n in MAM')
-plt.savefig('/Users/ellendyer/Documents/Work/REACH/Workshop_conda_python/plot1.png', bbox_inches='tight',dpi=200)
+plt.savefig('./plots/plot1.png', bbox_inches='tight',dpi=200)
 plt.show()
 plt.clf()
 
@@ -202,7 +204,7 @@ gl.right_labels = False
 ax.set_extent([36, 38.5, 9, 13.5])
 plt.title('Difference between interpoloated \n CHIRPS and station '
           'data \n over CHIRPS rainfall mesh \n for long term mean')
-plt.savefig('/Users/ellendyer/Documents/Work/REACH/Workshop_conda_python/plot2.png', bbox_inches='tight',dpi=200)
+plt.savefig('./plots/plot2.png', bbox_inches='tight',dpi=200)
 plt.show()
 plt.clf()
 
@@ -241,6 +243,6 @@ gl.right_labels = False
 ax.set_extent([36, 38.5, 9, 13.5])
 plt.title('Difference between interpoloated \n CHIRPS and station '
           'data \n over CHIRPS rainfall mesh \n for long term mean')
-plt.savefig('/Users/ellendyer/Documents/Work/REACH/Workshop_conda_python/plot3.png', bbox_inches='tight',dpi=200)
+plt.savefig('./plots/plot3.png', bbox_inches='tight',dpi=200)
 plt.show()
 plt.clf()

@@ -8,6 +8,7 @@ import cartopy.feature
 from cartopy.io.shapereader import Reader
 from cartopy.feature import ShapelyFeature
 from shapely.geometry import mapping
+#need to add geopandas to conda environment
 import geopandas as gpd
 
 #%%
@@ -15,7 +16,7 @@ import geopandas as gpd
 #(edit the path to the file correctly depending on where you saved it) 
 #and select the variable ‘precip’. Now we have a data array called da and
 #we can print it to see what we have:
-ds = xr.open_dataset("./workshop_chirps.nc")
+ds = xr.open_dataset("../workshop_setup/workshop_chirps.nc")
 da = ds["precip"]
 # print data array
 print(da)
@@ -118,12 +119,12 @@ ax.add_feature(cartopy.feature.BORDERS)
 ax.add_feature(cartopy.feature.RIVERS)
 
 #approach 1
-shape_feature = ShapelyFeature(Reader("./LakeTana_WGS/Lake_Tana_WGS.shp").geometries(),
+shape_feature = ShapelyFeature(Reader("../LakeTana_WGS/Lake_Tana_WGS.shp").geometries(),
                                  ccrs.PlateCarree(), facecolor='none', edgecolor='black')
 ax.add_feature(shape_feature, edgecolor='green',facecolor='none',lw=5)
 
 #approach 2
-data = gpd.read_file('./LakeTana_WGS/Lake_Tana_WGS.shp')
+data = gpd.read_file('../LakeTana_WGS/Lake_Tana_WGS.shp')
 print(data.keys())
 print("tana crs", data.crs)
 data.plot(ax=ax, edgecolor='yellow', facecolor='none',lw=1,zorder=2,linestyle='--')
@@ -136,12 +137,12 @@ plt.show()
 plt.clf()
 
 #---Approach to clip data using shapefiles
-rasterarray = xr.open_dataarray("./workshop_chirps.nc")
+rasterarray = xr.open_dataarray("../workshop_setup/workshop_chirps.nc")
 rasterarray.rio.write_crs("epsg:4326", inplace=True)
 
 seas_anom = rasterarray.groupby("time.season").mean('time') - rasterarray.mean('time')
 
-data = gpd.read_file('/Users/ellendyer/Documents/Work/shapefiles/LakeTana_WGS/Lake_Tana_WGS.shp')
+data = gpd.read_file('../LakeTana_WGS/Lake_Tana_WGS.shp')
 new_seas_anom = seas_anom.rio.clip(data.geometry.apply(mapping),data.crs)
                                  
 
@@ -160,16 +161,16 @@ plt.clf()
 #Step 7 : plot Awash maps
 
 #---another approach to clip
-rasterarray = xr.open_dataarray("./workshop_chirps.nc")
+rasterarray = xr.open_dataarray("../workshop_setup/workshop_chirps.nc")
 rasterarray.rio.write_crs("epsg:4326", inplace=True)
 
 seas_anom = rasterarray.groupby("time.season").mean('time') - rasterarray.mean('time')
 
-river_data = gpd.read_file('./Awash/Awash_river_network.shp')
+river_data = gpd.read_file('../Awash/Awash_river_network.shp')
 print(river_data)
 
 
-data = gpd.read_file('./Awash/Awash_basin_border.shp')
+data = gpd.read_file('../Awash/Awash_basin_border.shp')
 print(data)
 print(data.keys())
 print(data['OBJECTID'])
@@ -203,13 +204,13 @@ plt.clf()
 #Step 8 : plot Ethiopia maps
 
 #---another approach to clip
-rasterarray = xr.open_dataarray("./workshop_chirps.nc")
+rasterarray = xr.open_dataarray("../workshop_setup/workshop_chirps.nc")
 rasterarray.rio.write_crs("epsg:4326", inplace=True)
 
 seas_anom = rasterarray.groupby("time.season").mean('time') - rasterarray.mean('time')
 
 
-data = gpd.read_file('./afr_g2014_2013_0/afr_g2014_2013_0.shp')
+data = gpd.read_file('../afr_g2014_2013_0/afr_g2014_2013_0.shp')
 print(data)
 print(data.keys())
 print(data['geometry'])
@@ -251,5 +252,5 @@ plt.clf()
 # write seas_anom to netCDF to save your work 
 #for later or share your calculations
 #It's always a good idea to use a defined path!
-seas_anom.to_netcdf("./files/workshop_out_sa.nc")
+seas_anom.to_netcdf("../files/workshop_out_sa.nc")
 

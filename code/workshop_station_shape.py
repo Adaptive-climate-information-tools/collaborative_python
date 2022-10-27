@@ -13,6 +13,7 @@ import cartopy.feature
 #**To run this code you will need to conda install geopandas and rioxarray
 import geopandas as gpd
 from shapely.geometry import mapping
+import rioxarray
 
 #Here is a function definition - someone wrote this and shared it
 #to help other strip empty spaces from excel file fields

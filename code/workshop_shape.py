@@ -8,8 +8,9 @@ import cartopy.feature
 from cartopy.io.shapereader import Reader
 from cartopy.feature import ShapelyFeature
 from shapely.geometry import mapping
-#need to add geopandas to conda environment
+#need to add geopandas and rioxarray to conda environment
 import geopandas as gpd
+import rioxarray
 
 #%%
 #Step 2: Read in our data from a netcdf file of rainfall over Ethiopia 

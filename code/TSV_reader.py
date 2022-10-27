@@ -127,7 +127,7 @@ name = 'NCEP-CFSv2fcst_PRCP_Jul-Sep_iniJun2021' # has 4 header rows
 #filename = "../PRCP_Jun/input/"+name+".tsv"
 
 #filepath with workshop files:
-filepath = "./pycpt_files/"
+filepath = "../pycpt_files/"
 filename = name+".tsv"
 file = os.path.join(filepath, filename)  # File could be entered directly
 
@@ -174,7 +174,7 @@ print(full_xr)
 #sys.exit()
 
 #Write to netcdf
-full_xr.to_netcdf('./files/'+name+'.nc')
+full_xr.to_netcdf('../files/'+name+'.nc')
 
 #Quick plot to check
 fig = plt.figure(figsize=(7,6))

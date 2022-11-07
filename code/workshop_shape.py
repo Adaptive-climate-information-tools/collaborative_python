@@ -5,8 +5,8 @@ import xarray as xr
 from matplotlib import pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature
-from cartopy.io.shapereader import Reader
-from cartopy.feature import ShapelyFeature
+#from cartopy.io.shapereader import Reader
+#from cartopy.feature import ShapelyFeature
 from shapely.geometry import mapping
 #need to add geopandas and rioxarray to conda environment
 import geopandas as gpd
@@ -21,96 +21,32 @@ ds = xr.open_dataset("../workshop_setup/workshop_chirps.nc")
 da = ds["precip"]
 # print data array
 print(da)
-# print attributes in file metadata
-print(da.attrs)
-# print a list of array dimensions
-print(da.dims)
-# print a list of array coordinates
-print(da.coords)
-# print time and lon dim labels
-print(da.time)
-print(da.lon)
-
 
 #%%
-#Step 3 : Let’s make a quick plot of one month of data. 
-#To do this we will select one date using the .sel function 
-#and using the coordinate time and its labels. In xarray you can 
-#use date strings to select time steps (use the coordinate format 
-#that we saw when printing da.time above). If you instead wanted to 
-#choose the first time element you would use .isel which lets you select 
-#using normal array indices, so the first month would be .isel(time=0).
-
-#use coordinate names
-da.sel(time='2018-07-01').plot()
-plt.show()
-plt.clf()
-
-#%%
-#Step 4 : Let’s select and modify data. First we will make a timeseries by taking 
-#an average over the dimensions lat and lon. Remember to use the dimension names 
-#that we found in printing da.dims above. We can then select a smaller time range 
-#for this time series by using .sel again but this time by takin a slice. 
-#If you are selecting a single point you either need to know the exact coordinates 
-#or you need to ask xarray to select the ‘nearest’ point.
-
-#make a timeseries plot by taking a regional average
-ts = da.mean(dim=('lat','lon'))
-print(ts)
-ts.plot()
-plt.show()
-plt.clf()
-
-#select a time slice from ts timeseries (you can use date strings
-#with xarray)the .sel slice method chooses the nearest point so 
-#you don't need to know exact bounds
-ts = ts.sel(time=slice('2015-01-01','2017-12-31'))
-ts.plot()
-plt.show()
-plt.clf()
-
-#if you use .sel without slice then you need to say 
-#that you want the nearest point
-print(da.sel(lat=3.333,lon=40.111,method='nearest'))
-
-#%%
-#Step 5 : Xarray has use some of the useful grouping functions like 
+#Step 3 : Xarray has use some of the useful grouping functions like 
 #groupby (makes bins), rolling (can do rolling averages), 
 #resample (can change time frequencies) and more!
 
-#groupby just makes bins but doesn’t alter your data array  
-print(da.groupby("time.season"))
+#Let's select months from the JJAS season
+da_jjas = da.sel(time=da.time.dt.month.isin([6,7,8,9]))
+#Calculate long term mean (of full timeseries for all months)
+da_mean = da.mean('time')
+#Calculate JJAS mean for full timeseries
+da_jjas_mean = da_jjas.mean('time')
 
-#if you want to alter it you need to act on it and here we do 
-#this by taking a time mean with .mean(‘time’)
-#calculate long term seasonal means 
-#(now 'time' has been replaced by 'season')
-print(da.groupby("time.season").mean('time'))
-#calculate a timeseries of annual averages 
-#(now 'time' has been replaced by 'year')
-print(da.groupby("time.year").mean('time'))
+#Calculate anomaly of JJAS for each year relative to long term mean
+seas_anom = da_jjas_mean - da_mean
 
-# create new data arrays with these time means 
-seas_mean = da.groupby("time.season").mean('time')
-ann_mean = da.groupby("time.year").mean('time')
-
-#calculate long term seasonal anomalies from the long term annual mean
-#you can do simple matrix math to data arrays just like you do with numpy
-seas_anom = seas_mean - ann_mean.mean('year')
-
-#%%
-#Step 6 : plot the seasonal anomaly maps
-
-#This will plot all four xarray defined seasons (we can talk about 
-#selecting different seasons another time!) and plot them with the 
-#automatic xarray plotting function
-seas_anom.plot(col="season")
+#Let's preview this with a plot
+seas_anom.plot()
 plt.show()
 plt.clf()
 
+
+#%%
+#Step 4 : plot the seasonal anomaly map with borders
+
 #But we can make nicer plots with geography (using cartopy)
-#Here we will just plot for JJA by using .sel and the new coordinate 
-#season with the label ‘JJA’
 #We can look at more ways to plot and the details below later on
 
 #---plot with two shapefile approaches (caropy and shapely, and gpd)
@@ -118,59 +54,60 @@ ax = plt.axes(projection=ccrs.PlateCarree())
 ax.coastlines()
 ax.add_feature(cartopy.feature.BORDERS)
 ax.add_feature(cartopy.feature.RIVERS)
-
-#approach 1
-shape_feature = ShapelyFeature(Reader("../LakeTana_WGS/Lake_Tana_WGS.shp").geometries(),
-                                 ccrs.PlateCarree(), facecolor='none', edgecolor='black')
-ax.add_feature(shape_feature, edgecolor='green',facecolor='none',lw=5)
-
-#approach 2
-data = gpd.read_file('../LakeTana_WGS/Lake_Tana_WGS.shp')
-print(data.keys())
-print("tana crs", data.crs)
-data.plot(ax=ax, edgecolor='yellow', facecolor='none',lw=1,zorder=2,linestyle='--')
-
 #plot  data
-seas_anom.sel(season='JJA').plot(ax=ax,transform=ccrs.PlateCarree())
+seas_anom.plot(ax=ax,transform=ccrs.PlateCarree())
 # for extent the order is  [West,East,South,North]
-ax.set_extent([33, 47, 3.5, 14.5])
+ax.set_extent([33, 47, 3.5, 14.75])
 plt.show()
 plt.clf()
 
-#---Approach to clip data using shapefiles
-rasterarray = xr.open_dataarray("../workshop_setup/workshop_chirps.nc")
-rasterarray.rio.write_crs("epsg:4326", inplace=True)
+#%%
 
-seas_anom = rasterarray.groupby("time.season").mean('time') - rasterarray.mean('time')
-
-data = gpd.read_file('../LakeTana_WGS/Lake_Tana_WGS.shp')
-new_seas_anom = seas_anom.rio.clip(data.geometry.apply(mapping),data.crs)
-                                 
-
+#Plot with a shapefile
+#Start by setting up your plot with the standard cartopy method
 ax = plt.axes(projection=ccrs.PlateCarree())
 ax.coastlines()
 ax.add_feature(cartopy.feature.BORDERS)
 ax.add_feature(cartopy.feature.RIVERS)
 
-new_seas_anom.sel(season='JJA').plot(ax=ax,transform=ccrs.PlateCarree())
+#Use geopandas to read in the shapefile (above we imported geopandas as gpd)
+data = gpd.read_file('../LakeTana_WGS/Lake_Tana_WGS.shp')
+print(data.keys())
+print("tana crs", data.crs)
+data.plot(ax=ax, edgecolor='lightgreen', facecolor='none',lw=2,zorder=2,linestyle='-')
+#plot  data
+seas_anom.plot(ax=ax,transform=ccrs.PlateCarree())
 # for extent the order is  [West,East,South,North]
-ax.set_extent([33, 47, 3.5, 14.5])
+ax.set_extent([33, 47, 3.5, 14.75])
 plt.show()
 plt.clf()
 
 #%%
-#Step 7 : plot Awash maps
+#Tana basin example
+#Clip data using shapefiles
+#Have to make sure your xarray has a recognised coordinate system 
+#that is the same as shapefiles (this one works - in all situations I have found!)
+seas_anom_raster = seas_anom.rio.write_crs("epsg:4326")
+#You can now clip with the shapefile
+data = gpd.read_file('../LakeTana_WGS/Lake_Tana_WGS.shp')
+seas_anom_clip = seas_anom_raster.rio.clip(data.geometry.apply(mapping),data.crs)
+                                 
+#Now plot with cartopy
+ax = plt.axes(projection=ccrs.PlateCarree())
+ax.coastlines()
+ax.add_feature(cartopy.feature.BORDERS)
+ax.add_feature(cartopy.feature.RIVERS)
+seas_anom_clip.plot(ax=ax,transform=ccrs.PlateCarree())
+# for extent the order is  [West,East,South,North]
+ax.set_extent([35, 39, 9, 14.75])
+plt.show()
+plt.clf()
 
-#---another approach to clip
-rasterarray = xr.open_dataarray("../workshop_setup/workshop_chirps.nc")
-rasterarray.rio.write_crs("epsg:4326", inplace=True)
+#%%
+#Awash basin example
 
-seas_anom = rasterarray.groupby("time.season").mean('time') - rasterarray.mean('time')
-
-river_data = gpd.read_file('../Awash/Awash_river_network.shp')
-print(river_data)
-
-
+#This shapefile contains a lot more information so printing a few
+#steps helpf you to find what is in the file
 data = gpd.read_file('../Awash/Awash_basin_border.shp')
 print(data)
 print(data.keys())
@@ -178,68 +115,53 @@ print(data['OBJECTID'])
 print(data['BASIN_ID'])
 print(data['geometry'])
 print("awash crs", data.crs)
-new_seas_anom = seas_anom.rio.clip(data.geometry.apply(mapping),data.crs)
+#We will clip using the outline of the whole shapefil
+seas_anom_clip = seas_anom_raster.rio.clip(data.geometry.apply(mapping),data.crs)
                                  
-
+#Now set up plot using cartopy
 ax = plt.axes(projection=ccrs.PlateCarree())
 ax.coastlines()
 ax.add_feature(cartopy.feature.BORDERS)
 ax.add_feature(cartopy.feature.RIVERS)
 
 #there isn't a pure outline but you can select different
-#reional outlines from the shapefile like this
+#regional outlines from the shapefile like this
 #data = data.where(data['OBJECTID']==1)
 data.plot(ax=ax, edgecolor='darkorange', facecolor='none',lw=2,zorder=2,linestyle='-')
 
-#the rivers all seem like tiny segments so hard to select a good one
-#river_data = river_data.where(data['OBJECTID']==5)
-#river_data.plot(ax=ax, edgecolor='black', facecolor='none',lw=1,zorder=2,linestyle='-')
-
-new_seas_anom.sel(season='JJA').plot(ax=ax,transform=ccrs.PlateCarree())
+seas_anom_clip.plot(ax=ax,transform=ccrs.PlateCarree())
 # for extent the order is  [West,East,South,North]
 ax.set_extent([37.9, 43.5, 7.7, 12.3])
 plt.show()
 plt.clf()
 
 #%%
-#Step 8 : plot Ethiopia maps
-
-#---another approach to clip
-rasterarray = xr.open_dataarray("../workshop_setup/workshop_chirps.nc")
-rasterarray.rio.write_crs("epsg:4326", inplace=True)
-
-seas_anom = rasterarray.groupby("time.season").mean('time') - rasterarray.mean('time')
-
-
+#Ethiopia and ICPAC country examples
 data = gpd.read_file('../afr_g2014_2013_0/afr_g2014_2013_0.shp')
 print(data)
 print(data.keys())
 print(data['geometry'])
 print(data['ADM0_NAME'])
 print(data['ICPAC'])
+#Select the Ethiopian shape to clip with
 datanew=data[data['ADM0_NAME']=='Ethiopia']
 #datanew=data[data['IGAD']==4]
 print(datanew)
 print("countries crs", datanew.crs)
-new_seas_anom = seas_anom.rio.clip(datanew.geometry.apply(mapping),datanew.crs)
-                                 
+#Clip using datanew (where we selected the shape of Ethiopia)
+seas_anom_clip = seas_anom_raster.rio.clip(datanew.geometry.apply(mapping),datanew.crs)                             
 
 ax = plt.axes(projection=ccrs.PlateCarree())
 ax.coastlines()
 ax.add_feature(cartopy.feature.BORDERS)
 ax.add_feature(cartopy.feature.RIVERS)
 
-#there isn't a pure outline but you can select different
-#reional outlines from the shapefile like this
+#Overlay with all ICPAC country outlines
 #data_eth = data.where(data['ADM0_NAME']=='Ethiopia')
 data_eth = data.where(data['ICPAC']==14)
 data_eth.plot(ax=ax, edgecolor='green', facecolor='none',lw=2,zorder=2,linestyle='-')
 
-#the rivers all seem like tiny segments so hard to select a good one
-#river_data = river_data.where(data['OBJECTID']==5)
-#river_data.plot(ax=ax, edgecolor='black', facecolor='none',lw=1,zorder=2,linestyle='-')
-
-new_seas_anom.sel(season='JJA').plot(ax=ax,transform=ccrs.PlateCarree())
+seas_anom_clip.plot(ax=ax,transform=ccrs.PlateCarree())
 # for extent the order is  [West,East,South,North]
 ax.set_extent([20, 50, -5, 17])
 plt.show()
@@ -248,10 +170,9 @@ plt.clf()
 
 
 #%%
-#Step 9 : write a data array back to a netcdf file 
-
 # write seas_anom to netCDF to save your work 
 #for later or share your calculations
 #It's always a good idea to use a defined path!
-seas_anom.to_netcdf("../files/workshop_out_sa.nc")
+#Based on the last step this will be cut out for Ethiopia
+seas_anom_clip.to_netcdf("../files/workshop_out_jjas_anom_clip.nc")
 

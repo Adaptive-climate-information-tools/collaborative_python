@@ -161,7 +161,8 @@ isst_anom = isst.groupby('time.month') - isstclim
 
 
 #Correlation of seasonal anomaly means for JAS
-p_awash_jas = (p_awash_anom.sel(time=p_awash_anom.time.dt.month.isin([10,11,12]))).groupby('time.year').mean('time')
+
+p_awash_jas = (p_awash_anom.sel(time=p_awash_anom.time.dt.month.isin([6,7,8]))).groupby('time.year').mean('time')
 isst_jas = (isst_anom.sel(time=isst_anom.time.dt.month.isin([6,7,8]))).groupby('time.year').mean('time')
 correl_map = np.apply_along_axis(spearmanr,0, isst_jas,p_awash_jas)
 # correl_map isn't an xarray - let's make it one

@@ -51,7 +51,7 @@ chirps_reg = da.sel(lat=slice(7,12),lon=slice(36,40),time=slice('1990-01-01','20
 st = pd.read_csv("../station/NMA_Tana_basin.csv",header=0,index_col=False)
 
 #OR you can read in spreadsheet station data as an excel file here:
-# st = pd.read_excel("./NMA_Tana_basin.xlsx",header=0,index_col=False,sheet_name='data')
+#st = pd.read_excel("./NMA_Tana_basin.xlsx",header=0,index_col=False,sheet_name='data')
 #IF you read in an excel file you need to make sure all the column names are strings
 # st.columns = st.columns.map(str)
 
@@ -73,7 +73,7 @@ print(stpr.keys())
 newst = pd.melt(stpr,id_vars=['Years', 'Latitiude', 'Longitiude', 'Month', 'Time'], value_vars=np.arange(1,32).astype('str'))
 #Can rename columns so that they have generic names
 newst = newst.rename(columns={"variable": "Day", "value": "PRECIP","Latitiude":"lat", "Longitiude":"lon"})
-#print(newst.head())
+print(newst.head())
 #Drop any rows that don't have values (because the month doesn't have 31 days for instance)
 newst = newst.dropna(axis=0)
 #Make a list of dates for all values in the dataframe - could also include the hour
@@ -123,7 +123,13 @@ newst.to_csv('../files/out.csv')
 ## Step 6 : Select some months from both the CHIRPS and NMA datasets
 # Here we will look at March-May
 months = [3,4,5]
+#Taking long term MAM mean for chirps
 da_mam = da.sel(time=np.in1d(da['time.month'], months)).mean('time')
+
+#Resampling daily station data from xarray to monthly data
+xrst_monthly = xrst.resample(time="MS").mean()
+
+#Taking long term MAM mean for station data xarray
 xrst_mam = xrst.sel(time=np.in1d(xrst['time.month'], months)).mean('time')
 newst_mam = newst_toxr.loc[(newst_toxr.index.get_level_values('time').month.isin([3,4,5]))].groupby(level=('lat','lon')).mean()
 #print(newst_mam.index.get_level_values('lat').values)

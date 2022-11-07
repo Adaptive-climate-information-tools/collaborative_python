@@ -11,6 +11,9 @@ import cartopy.crs as ccrs
 import cartopy.feature
 #Import for Step 4
 from scipy.stats import spearmanr
+#Import for Step 6
+import geopandas as gpd
+from shapely.geometry import mapping
 
 #%%
 ##Step 2: Read in our data from a netcdf file of rainfall over Ethiopia
@@ -88,6 +91,7 @@ print(correl_value)
 # Now correlate mean Nino3.4 SSTs with spatial map of Ethiopian rainfall
 # Use a numpy function called apply along axis to loop over rainfall
 # lat and lon (https://numpy.org/doc/stable/reference/generated/numpy.apply_along_axis.html)
+# put 2d array before simple timeseries in apply_along_axis
 correl_map = np.apply_along_axis(spearmanr,0, p_eth,nsst_mean)
 print(correl_map.shape)
 # correl_map isn't an xarray - let's make it one
@@ -132,3 +136,81 @@ gl.right_labels = False
 #plt.savefig('.png',bbox_inches='tight',dpi=200)
 plt.show()
 plt.clf()
+
+#%%
+## Step 5: Reverse this and pick a region of Ethiopia (let's do the Awash basin) and correlate with all Indian Ocean SSTs in MAM
+
+#Use monthly anomalies again - can recycle p_eth_anom because it is 2D and cut out with Awash shapefile
+#make sure p_eth_anom has specific coordinate system
+p_eth_anom.rio.write_crs("epsg:4326", inplace=True)
+
+data = gpd.read_file('../Awash/Awash_basin_border.shp')
+print(data)
+print(data.keys())
+print(data['OBJECTID'])
+print(data['BASIN_ID'])
+print(data['geometry'])
+print("awash crs", data.crs)
+p_awash_anom = p_eth_anom.rio.clip(data.geometry.apply(mapping),data.crs)
+p_awash_anom = p_awash_anom.mean(dim=('lat','lon'))
+
+# have to start again with SSTs because we want them to be 2D now
+isst = gsst.sel(latitude=slice(25,-40),longitude=slice(-180,-60))
+isstclim = isst.groupby('time.month').mean('time')
+isst_anom = isst.groupby('time.month') - isstclim
+
+
+#Correlation of seasonal anomaly means for JAS
+p_awash_jas = (p_awash_anom.sel(time=p_awash_anom.time.dt.month.isin([10,11,12]))).groupby('time.year').mean('time')
+isst_jas = (isst_anom.sel(time=isst_anom.time.dt.month.isin([6,7,8]))).groupby('time.year').mean('time')
+correl_map = np.apply_along_axis(spearmanr,0, isst_jas,p_awash_jas)
+# correl_map isn't an xarray - let's make it one
+da_r = xr.DataArray(data=correl_map[0],dims=["lat","lon"],coords={"lat":isst.latitude.values,"lon":isst.longitude.values})
+da_p = xr.DataArray(data=correl_map[1],dims=["lat","lon"],coords={"lat":isst.latitude.values,"lon":isst.longitude.values})
+
+
+#Plot correlation values where pvalues are less than 0.1
+da_r_sig = da_r.where(da_p<0.1)
+
+ax = plt.axes(projection=ccrs.PlateCarree())
+ax.coastlines()
+ax.add_feature(cartopy.feature.BORDERS,lw=2)
+da_r.plot(ax=ax,cmap = plt.cm.PuOr,transform=ccrs.PlateCarree()
+               ,vmin=-0.8,vmax=0.8
+               ,extend='both'
+               ,robust=True,cbar_kwargs={'label': ""})
+CS = da_p.plot.contour(ax=ax,levels=[0.0,0.05,0.1],transform=ccrs.PlateCarree()
+                  ,linestyles=['dotted','--','-']
+                  ,colors=['green','black','red'])
+ax.clabel(CS, CS.levels, inline=True, fontsize=7)
+
+#plt.title('')
+gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
+                  linewidth=1, color='black', alpha=0.5, linestyle='dotted')
+gl.top_labels = False
+gl.right_labels = False
+#plt.savefig('.png',bbox_inches='tight',dpi=200)
+plt.show()
+plt.clf()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

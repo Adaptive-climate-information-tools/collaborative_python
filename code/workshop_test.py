@@ -6,6 +6,8 @@ from matplotlib import pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature
 
+
+
 #%%
 #Step 2: Read in our data from a netcdf file of rainfall over Ethiopia 
 #(edit the path to the file correctly depending on where you saved it) 
@@ -39,6 +41,33 @@ da.sel(time='2018-07-01').plot()
 plt.show()
 plt.clf()
 
+print(da.sel(lat=34.5,method='nearest'))
+
+#can use time coordinate and datetime to select specific months 
+#from the dataset
+pseas = da.sel(time=da.time.dt.month.isin([6,7,8,9]))
+seasts = pseas.groupby("time.year").mean('time')
+
+sasts_box = seasts.sel(lat=slice(10,15),lon=slice(33,48))
+sasts_box_mean = sasts_box.mean('year')
+sasts_box_mean.plot()
+plt.show()
+plt.clf()
+
+#%%
+#climatology is called clime
+clime = da.sel(time=slice('1991-01-01','2020-12-31'))
+clime = clime.groupby('time.month').mean('time')
+print(clime)
+
+#year for anomaly = 1998 and is called year_sel
+year_sel = da.sel(time=slice('1998-01-01','1998-12-31'))
+
+year_anom = year_sel.groupby('time.month') - clime
+
+year_anom_plot = year_anom.mean('time').plot()
+plt.show()
+plt.clf()
 #%%
 #Step 4 : Let’s select and modify data. First we will make a timeseries by taking 
 #an average over the dimensions lat and lon. Remember to use the dimension names 

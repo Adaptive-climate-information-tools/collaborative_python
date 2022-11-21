@@ -9,7 +9,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature
-import sys
+#import sys
 
 
 def split_line(data_string):
@@ -127,9 +127,10 @@ name = 'NCEP-CFSv2fcst_PRCP_Jul-Sep_iniJun2021' # has 4 header rows
 #filename = "../PRCP_Jun/input/"+name+".tsv"
 
 #filepath with workshop files:
-filepath = "../pycpt_files/"
+path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
+filepath = "pycpt_files/"
 filename = name+".tsv"
-file = os.path.join(filepath, filename)  # File could be entered directly
+file = os.path.join(path,filepath, filename)  # File could be entered directly
 
 var = 'PRECIP' # variable name
 headerlines = 4  # Defined by the files
@@ -174,7 +175,7 @@ print(full_xr)
 #sys.exit()
 
 #Write to netcdf
-full_xr.to_netcdf('../files/'+name+'.nc')
+full_xr.to_netcdf(path+'files/'+name+'.nc')
 
 #Quick plot to check
 fig = plt.figure(figsize=(7,6))

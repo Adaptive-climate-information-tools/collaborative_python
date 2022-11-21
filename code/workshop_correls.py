@@ -1,9 +1,8 @@
 #Step 1: Start with import statements (this tells python which packages 
 #you will actually use in your code and names 
 #them, so we will call xarray : xr)
-import sys
+
 import xarray as xr
-import pandas as pd
 import numpy as np
 #Import for Step 3
 from matplotlib import pyplot as plt
@@ -14,19 +13,21 @@ from scipy.stats import spearmanr
 #Import for Step 6
 import geopandas as gpd
 from shapely.geometry import mapping
+import rioxarray
 
 #%%
 ##Step 2: Read in our data from a netcdf file of rainfall over Ethiopia
 #(edit the path to the file correctly depending on where you saved it) 
 #and select the variable ‘precip’. Now we have a data array called da and
 #we can print it to see what we have:
-da = xr.open_dataarray("../workshop_setup/workshop_chirps.nc")
+path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
+da = xr.open_dataarray(path+'workshop_setup/workshop_chirps.nc')
 #convert from mm/month to mm/day
 da = da/da.time.dt.daysinmonth
 da = da.sel(time=slice('1981-01-01','2019-12-31'))
 # print data array
 print(da)
-hsst = xr.open_dataset("../files/HadISST_sst.nc")['sst']
+hsst = xr.open_dataset(path+'files/HadISST_sst.nc')['sst']
 print(hsst)
 # convert degree C to Kelvin
 hsst = hsst + 273.15
@@ -128,12 +129,12 @@ da_r_sig.plot(ax=ax,cmap = plt.cm.PuOr,transform=ccrs.PlateCarree()
                ,vmin=-0.8,vmax=0.8
                ,extend='both'
                ,robust=True,cbar_kwargs={'label': ""})
-#plt.title('')
+plt.title('Correlation of selected SSTs with Ethiopian rainfall')
 gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
                   linewidth=1, color='black', alpha=0.5, linestyle='dotted')
 gl.top_labels = False
 gl.right_labels = False
-#plt.savefig('.png',bbox_inches='tight',dpi=200)
+plt.savefig(path+'plots/WC_1.png',bbox_inches='tight',dpi=200)
 plt.show()
 plt.clf()
 
@@ -144,7 +145,7 @@ plt.clf()
 #make sure p_eth_anom has specific coordinate system
 p_eth_anom.rio.write_crs("epsg:4326", inplace=True)
 
-data = gpd.read_file('../Awash/Awash_basin_border.shp')
+data = gpd.read_file(path+'Awash/Awash_basin_border.shp')
 print(data)
 print(data.keys())
 print(data['OBJECTID'])
@@ -185,12 +186,12 @@ CS = da_p.plot.contour(ax=ax,levels=[0.0,0.05,0.1],transform=ccrs.PlateCarree()
                   ,colors=['green','black','red'])
 ax.clabel(CS, CS.levels, inline=True, fontsize=7)
 
-#plt.title('')
+plt.title('Correlation of selected Ethiopian rainfall with SSTs')
 gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
                   linewidth=1, color='black', alpha=0.5, linestyle='dotted')
 gl.top_labels = False
 gl.right_labels = False
-#plt.savefig('.png',bbox_inches='tight',dpi=200)
+plt.savefig(path+'plots/WC_2.png',bbox_inches='tight',dpi=200)
 plt.show()
 plt.clf()
 

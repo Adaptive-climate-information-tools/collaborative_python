@@ -59,6 +59,7 @@ def rename_columns(cols_indf,cols_torename,cols_newnames):
 
 #Define some important parameters, variables you want to use and columns you want
 #to drop or rename for all files here
+path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
 col_names_to_drop = ['Stations','ID','Monthly total','Elevation']
 col_names_to_rename = ["Latitude","Longitude"]
 new_col_names = ["lat","lon"]
@@ -67,7 +68,7 @@ lat1, lat2 = 2,14
 lon1, lon2 = 32,50
 
 #Get a list of spreadsheets in the directory - first specify a directory path
-dir_p = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/station/'
+dir_p = path+'station/'
 list_f = glob.glob(dir_p+'*.csv')
 
 #You can read in spreadsheet station data as a .csv file here
@@ -156,10 +157,10 @@ xrst = xrst.dropna('lon','all')
 #xrst.mean('time', skipna=True).plot()
 #plt.show()
 #plt.clf()
-xrst.to_netcdf('/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/files/out_mult.nc',mode='w')
+xrst.to_netcdf(path+'files/out_mult.nc',mode='w')
 #We can also output our dataframe in this new
 #organisation to a csv file (other formats available)
-newst_toxr.to_csv('/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/files/out_mult_vars.csv')
+newst_toxr.to_csv(path+'files/out_mult_vars.csv')
 
 
 #%%
@@ -213,7 +214,7 @@ gl.right_labels = False
 # for extent the order is  [West,East,South,North]
 ax.set_extent([33, 45, 5, 15.5])
 plt.title('Station rainfall scatter in MAM')
-plt.savefig('/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/plots/plot_mult1.png', bbox_inches='tight',dpi=200)
+plt.savefig(path+'plots/WSMV_1.png', bbox_inches='tight',dpi=200)
 plt.show()
 plt.clf()
 
@@ -242,6 +243,6 @@ gl.top_labels = False
 gl.right_labels = False
 ax.set_extent([34, 42, 5, 14.5])
 plt.title('Station scatter (xarray) \n in MAM with Tana shape')
-plt.savefig('/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/plots/plot_mult2.png', bbox_inches='tight',dpi=200)
+plt.savefig(path+'plots/WSMV_2.png', bbox_inches='tight',dpi=200)
 plt.show()
 plt.clf()

@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 #(edit the path to the file correctly depending on where you saved it) 
 #and select the variable ‘precip’. Now we have a data array called da and
 #we can print it to see what we have:
-da = xr.open_dataarray("../workshop_setup/workshop_chirps.nc")
+path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
+da = xr.open_dataarray(path+'workshop_setup/workshop_chirps.nc')
 #convert from mm/month to mm/day
 da = da/da.time.dt.daysinmonth
 da = da.sel(time=slice('1981-01-01','2019-12-31'))

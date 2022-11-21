@@ -13,7 +13,8 @@ import cartopy.feature
 #(edit the path to the file correctly depending on where you saved it) 
 #and select the variable ‘precip’. Now we have a data array called da and
 #we can print it to see what we have:
-da = xr.open_dataarray("../workshop_setup/workshop_chirps.nc")
+path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
+da = xr.open_dataarray(path+'workshop_setup/workshop_chirps.nc')
 # print data array
 print(da)
 # print attributes in file metadata
@@ -150,5 +151,4 @@ plt.clf()
 # write seas_anom to netCDF to save your work 
 #for later or share your calculations
 #It's always a good idea to use a defined path!
-#seas_anom.to_netcdf("/Users/ellendyer/Documents/Work/REACH/Workshop_conda_python/workshop_out_sa.nc")
-seas_anom.to_netcdf("../files/workshop_out_sa.nc")
+seas_anom.to_netcdf(path+'files/workshop_out_sa.nc')

@@ -17,7 +17,8 @@ import rioxarray
 #(edit the path to the file correctly depending on where you saved it) 
 #and select the variable ‘precip’. Now we have a data array called da and
 #we can print it to see what we have:
-ds = xr.open_dataset("../workshop_setup/workshop_chirps.nc")
+path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
+ds = xr.open_dataset(path+'workshop_setup/workshop_chirps.nc')
 da = ds["precip"]
 # print data array
 print(da)
@@ -71,7 +72,7 @@ ax.add_feature(cartopy.feature.BORDERS)
 ax.add_feature(cartopy.feature.RIVERS)
 
 #Use geopandas to read in the shapefile (above we imported geopandas as gpd)
-data = gpd.read_file('../LakeTana_WGS/Lake_Tana_WGS.shp')
+data = gpd.read_file(path+'LakeTana_WGS/Lake_Tana_WGS.shp')
 print(data.keys())
 print("tana crs", data.crs)
 data.plot(ax=ax, edgecolor='lightgreen', facecolor='none',lw=2,zorder=2,linestyle='-')
@@ -89,7 +90,7 @@ plt.clf()
 #that is the same as shapefiles (this one works - in all situations I have found!)
 seas_anom_raster = seas_anom.rio.write_crs("epsg:4326")
 #You can now clip with the shapefile
-data = gpd.read_file('../LakeTana_WGS/Lake_Tana_WGS.shp')
+data = gpd.read_file(path+'LakeTana_WGS/Lake_Tana_WGS.shp')
 seas_anom_clip = seas_anom_raster.rio.clip(data.geometry.apply(mapping),data.crs)
                                  
 #Now plot with cartopy
@@ -108,7 +109,7 @@ plt.clf()
 
 #This shapefile contains a lot more information so printing a few
 #steps helpf you to find what is in the file
-data = gpd.read_file('../Awash/Awash_basin_border.shp')
+data = gpd.read_file(path+'Awash/Awash_basin_border.shp')
 print(data)
 print(data.keys())
 print(data['OBJECTID'])
@@ -137,7 +138,7 @@ plt.clf()
 
 #%%
 #Ethiopia and ICPAC country examples
-data = gpd.read_file('../afr_g2014_2013_0/afr_g2014_2013_0.shp')
+data = gpd.read_file(path+'afr_g2014_2013_0/afr_g2014_2013_0.shp')
 print(data)
 print(data.keys())
 print(data['geometry'])
@@ -174,5 +175,5 @@ plt.clf()
 #for later or share your calculations
 #It's always a good idea to use a defined path!
 #Based on the last step this will be cut out for Ethiopia
-seas_anom_clip.to_netcdf("../files/workshop_out_jjas_anom_clip.nc")
+seas_anom_clip.to_netcdf(path+'files/workshop_out_jjas_anom_clip.nc')
 

@@ -55,11 +55,11 @@ def rename_columns(cols_indf,cols_torename,cols_newnames):
 
 col_names_to_rename = ["LAT","LON","Year"]
 new_col_names = ["lat","lon","Years"]
-
+path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
 
 for dataset in ['WRF','OBS']:
     #You can read in spreadsheet station data as a .csv file here:
-    st = pd.read_csv("/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/new_files/"+dataset+"_Jun_2021.csv",header=0,index_col=False)
+    st = pd.read_csv(path+'new_files/'+dataset+'_Jun_2021.csv',header=0,index_col=False)
     #strip extra white space around entries
     st = trim_all_columns(st)
     #print head of the dataframe to see column names and values
@@ -115,10 +115,10 @@ for dataset in ['WRF','OBS']:
     #xrst.mean('time', skipna=True).plot()
     #plt.show()
     #plt.clf()
-    xrst_out.to_netcdf('/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/files/out_'+dataset+'.nc')
+    xrst_out.to_netcdf(path+'files/out_'+dataset+'.nc')
     #We can also output our dataframe in this new
     #organisation to a csv file (other formats available)
-    newst_out.to_csv('/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/files/out_'+dataset+'.csv')
+    newst_out.to_csv(path+'files/out_'+dataset+'.csv')
     
     if dataset == 'WRF':
         
@@ -202,7 +202,7 @@ gl.right_labels = False
 #Change these values to plot a different section of the map
 ax.set_extent([33.5, 43.5, 3.5, 15])
 plt.title('Correlation between OBS and WRF shown with \n color of dots statistical significance shown \n by dot size (bigger=smaller pvalue)')
-#plt.savefig('/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/plots/plot_mult2.png', bbox_inches='tight',dpi=200)
+plt.savefig(path+'plots/WWOF_1.png', bbox_inches='tight',dpi=200)
 plt.show()
 plt.clf()
 

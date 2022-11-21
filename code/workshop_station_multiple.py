@@ -1,8 +1,8 @@
 #Step 1: Start with import statements (this tells python which packages 
 #you will actually use in your code and names 
 #them, so we will call xarray : xr)
-#import sys
-import xarray as xr
+import sys
+import glob
 import pandas as pd
 import numpy as np
 #Import for Step 7
@@ -12,8 +12,8 @@ import cartopy.feature
 #Import for Step 9
 #**To run this code you will need to conda install geopandas and rioxarray
 import geopandas as gpd
-from shapely.geometry import mapping
 import rioxarray
+from re import search
 import collections
 
 #Here is a function definition - someone wrote this and shared it
@@ -54,60 +54,58 @@ def rename_columns(cols_indf,cols_torename,cols_newnames):
     print('*****renaming columns: ',rename_cols)
     return rename_cols
 
+
 #%%
-##Step 2: Read in our data from a netcdf file of rainfall over Ethiopia
-#(edit the path to the file correctly depending on where you saved it) 
-#and select the variable ‘precip’. Now we have a data array called da and
-#we can print it to see what we have:
+##Step 2: Read in station data from NMA
+
+#Define some important parameters, variables you want to use and columns you want
+#to drop or rename for all files here
 path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
-da = xr.open_dataarray(path+'workshop_setup/workshop_chirps.nc')
-#convert from mm/month to mm/day
-da = da/da.time.dt.daysinmonth
-da = da.sel(time=slice('1996-01-01','2010-12-31'))
-# print data array
-#print(da)
-
-#select a region and time slice from ts timeseries (you can use date strings
-#with xarray). The .sel slice method chooses the nearest point so
-#you don't need to know exact bounds
-chirps_reg = da.sel(lat=slice(7,12),lon=slice(36,40))
-#print(chirps_reg)
-
-#%%
-##Step 3: Read in station data from NMA
-
-col_names_to_drop = ['Stations','ID','Monthly total','Elevation','Elements']
+col_names_to_drop = ['Stations','ID','Monthly total','Elevation']
 col_names_to_rename = ["Latitude","Longitude"]
 new_col_names = ["lat","lon"]
 variables_to_keep = 'PRECIP'
-#You can read in spreadsheet station data as a .csv file here:
-st = pd.read_csv(path+'station/NMA_Tana_basin.csv',header=0,index_col=False)
+lat1, lat2 = 2,14
+lon1, lon2 = 32,50
 
-#OR you can read in spreadsheet station data as an excel file here:
-#st = pd.read_excel("./NMA_Tana_basin.xlsx",header=0,index_col=False,sheet_name='data')
-#IF you read in an excel file you need to make sure all the column names are strings
-# st.columns = st.columns.map(str)
+#Get a list of spreadsheets in the directory - first specify a directory path
+dir_p = path+'station/'
+list_f = glob.glob(dir_p+'*.csv')
 
-#strip extra white space around entries
-st = trim_all_columns(st)
-#print head of the dataframe to see column names and values
-print(st.head())
-#Select just rainfall data (here called 'PRECIP')
-stpr = st[st['Elements'] == variables_to_keep]
-#drop any columns that aren't useful to your task
-stpr = stpr.drop(columns=drop_columns(stpr.columns,col_names_to_drop))
-#rename columns that usually have spelling mistakes
-stpr = stpr.rename(columns=rename_columns(stpr.columns,col_names_to_rename,new_col_names))
+#You can read in spreadsheet station data as a .csv file here
+#make a list to add all the files you read into
+dataf_list = []
+#loop through the list of files:
+for fi in list_f[0:2]:
+    print(fi)
+    st = pd.read_csv(fi,header=0,index_col=False)
 
-#check the names of columns by printing the keys of the dataframe
-print(stpr.keys())
+    #strip extra white space around entries
+    st = trim_all_columns(st)
+    #print head of the dataframe to see column names and values
+    print(st.head())
+    #Select just rainfall data (here called 'PRECIP')
+    stpr = st[st['Elements'] == variables_to_keep]
+    #drop any columns that aren't useful to your task
+    #because we are keeping multiple variables don't drop the Elements column here
+    stpr = stpr.drop(columns=drop_columns(stpr.columns,col_names_to_drop))
+    #rename columns that usually have spelling mistakes
+    stpr = stpr.rename(columns=rename_columns(stpr.columns,col_names_to_rename,new_col_names))
+
+    #check the names of columns by printing the keys of the dataframe
+    print(stpr.keys())
+    #add your dataframe to the list created before the loop
+    dataf_list.append(stpr)
+dataf = pd.concat(dataf_list)
+print(dataf)
+
 
 #%%
-##Step 4: Start rearranging the dataframe so we can work with it as an xarray and also
+##Step 3: Start rearranging the dataframe so we can work with it as an xarray and also
 #so that we can put in datetimes (useful later on)
 #melt moves around the headers so that days are now a column
-newst = pd.melt(stpr,id_vars=['Years', 'lat', 'lon', 'Month', 'Time'], value_vars=np.arange(1,32).astype('str'))
-#Can rename columns so that they have generic names
+newst = pd.melt(dataf,id_vars=['Years', 'lat', 'lon', 'Month', 'Time'], value_vars=np.arange(1,32).astype('str'))
+#Can rename columns so that there is a better label for days and for data values
 newst = newst.rename(columns={"variable": "Day", "value": variables_to_keep})
 print(newst.head())
 #Drop any rows that don't have values (because the month doesn't have 31 days for instance)
@@ -134,12 +132,18 @@ newst = newst.astype({variables_to_keep: 'float64'})
 #Now if we want to turn this into an xarray with PRECIP as the variable
 #we can set time, lat, and lon as index values
 newst_toxr = newst.set_index(['time','lat','lon'])
-#Select same date range as chirps
-newst_toxr = newst_toxr.loc['1996-01-01':'2010-12-31']
+#for the pandas dataframe we can just set the index to be time
+newst = newst.set_index('time')
+#remove duplicate values -- this can happen from manually modifying spreadsheets
+newst_toxr = newst_toxr[~newst_toxr.index.duplicated()]
+#select box of region you want data for (sometimes there are random outliers)
+newst = newst.loc[(newst.lat>lat1)& (newst.lat<lat2)& (newst.lon>lon1)& (newst.lon<lon2)]
+#Select date range if necessary
+newst_toxr = newst_toxr.loc['1996-01-01':'2018-12-31']
 print(newst_toxr.head())
 
 #%%
-## Step 5: Create an xarray or output the dataframe to a file
+## Step 4: Create an xarray or output the dataframe to a file
 #Now the dataframe is setup to be easily converted to an xarray that
 #we can make a spatial plot of
 xrst = newst_toxr.to_xarray()[variables_to_keep]
@@ -149,27 +153,23 @@ xrst = xrst.dropna('lon','all')
 #xrst.mean('time', skipna=True).plot()
 #plt.show()
 #plt.clf()
-xrst.to_netcdf(path+'files/out.nc')
+xrst.to_netcdf(path+'files/out_mult.nc',mode='w')
 #We can also output our dataframe in this new
 #organisation to a csv file (other formats available)
-newst.to_csv(path+'files/out.csv')
+newst.to_csv(path+'files/out_mult.csv')
 
 
 #%%
-## Step 6 : Select some months from both the CHIRPS and NMA datasets
+## Step 5: Select some months from both the CHIRPS and NMA datasets
 # Here we will look at March-May
 months = [3,4,5]
-#Taking long term MAM mean for chirps
-da_mam = da.sel(time=np.in1d(da['time.month'], months)).mean('time')
 
 #Taking long term MAM mean for station data xarray
 xrst_mam = xrst.sel(time=np.in1d(xrst['time.month'], months)).mean('time')
 newst_mam = newst_toxr.loc[(newst_toxr.index.get_level_values('time').month.isin([3,4,5]))].groupby(level=('lat','lon')).mean()
-#print(newst_mam.index.get_level_values('lat').values)
-#print(newst_mam.head(15))
 
 #%%
-## Step 7: Plot chirps as a background with a station scatter from both the xarray and pandas dataframe
+## Step 6: Plot chirps as a background with a station scatter from both the xarray and pandas dataframe
 
 #Create an empty figure - the size is (width,height) and you might have
 #to adjust this later
@@ -177,14 +177,10 @@ fig = plt.figure(figsize=(8,5))
 #Create an axis for your figure and you can use a coordinate projection
 #
 ax = plt.axes(projection=ccrs.PlateCarree())
-#Do a filled contour with chirps (same as first example)
-#alpha of less than 1 makes the contours a bit transparent so its easier to see the scatter
-da_mam.plot.contourf(ax=ax,transform=ccrs.PlateCarree(),alpha=0.8,vmin=0,vmax=4,
-                     cbar_kwargs={'label': "MAM CHIRPS contours (mm/day)"})
 #Create a mesh of lat lons using the xarray of station data we made above
 #This is necessary because the xarray is a grid instead of a list
 lon, lat = np.meshgrid(xrst_mam.lon,xrst_mam.lat)
-xrst_p = ax.scatter(x=lon,y=lat,s=60,c=xrst_mam,vmin=0,vmax=4,
+xrst_p = ax.scatter(x=lon,y=lat,s=60,c=xrst_mam,#vmin=0,vmax=4,
                     edgecolors=None,transform=ccrs.PlateCarree())
 plt.colorbar(xrst_p,label='MAM Station xarray (mm/day)',ax=ax)
 #For a scatter from the dataframe we need to select the index values for lat and lon
@@ -207,72 +203,27 @@ gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
 gl.top_labels = False
 gl.right_labels = False
 # for extent the order is  [West,East,South,North]
-ax.set_extent([36, 38.5, 9, 13.5])
-plt.title('Station scatter (pandas and xarray) \n over CHIRPS rainfall contours \n in MAM')
-plt.savefig(path+'plots/WSS_1.png', bbox_inches='tight',dpi=200)
-plt.show()
-plt.clf()
-
-#%%
-## Step 8: Interpolate Chirps data to the station locations so we can then calculate the difference
-#between values at station locations
-#There are options for interpolation methods but I have chosen to linearly interpolate here
-da_st = da.interp(lon=xrst.lon.values,lat=xrst.lat.values,method='linear')
-diff_st = da_st - xrst
-diff_st = diff_st.mean('time')
-#print(diff_st)
-
-fig = plt.figure(figsize=(7,6))
-ax = plt.axes(projection=ccrs.PlateCarree())
-#Do a filled contour with chirps (same as first example)
-#alpha of less than 1 makes the contours a bit transparent so its easier to see the scatter
-da.mean('time').plot.pcolormesh(cmap=plt.cm.viridis,ax=ax,transform=ccrs.PlateCarree(),
-                                alpha=1.0,cbar_kwargs={'label': "Mean CHIRPS mesh (mm/day)"})
-#Create a mesh of lat lons using the xarray of station data we made above
-#This is necessary because the xarray is a grid instead of a list
-lon, lat = np.meshgrid(diff_st.lon,diff_st.lat)
-diffp = ax.scatter(x=lon,y=lat,s=60,c=diff_st,vmin=-1.5,vmax=1.5,
-                   cmap=plt.cm.PRGn,edgecolors=None,transform=ccrs.PlateCarree())
-plt.colorbar(diffp,label='Mean CHIRPS-station (mm/day)',ax=ax)
-ax.coastlines()
-ax.add_feature(cartopy.feature.BORDERS)
-ax.add_feature(cartopy.feature.RIVERS)
-gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
-                  linewidth=1, color='black', alpha=0.5, linestyle='dotted')
-gl.top_labels = False
-gl.right_labels = False
-ax.set_extent([36, 38.5, 9, 13.5])
-plt.title('Difference between interpoloated \n CHIRPS and station '
-          'data \n over CHIRPS rainfall mesh \n for long term mean')
-plt.savefig(path+'plots/WSS_2.png', bbox_inches='tight',dpi=200)
+ax.set_extent([33, 45, 5, 15.5])
+plt.title('Station scatter (pandas and xarray) in MAM')
+plt.savefig(path+'plots/WSM_1.png', bbox_inches='tight',dpi=200)
 plt.show()
 plt.clf()
 
 
 #%%
-## Step 9: Try to cut out this data for Tana basin where the NMA station data is located
+## Step 6: Add a shapefile to the map
 
 #Read in your shapefile using a library called geopandas - we called it gpd at the start of the code
 shape = gpd.read_file(path+'LakeTana_WGS/Lake_Tana_WGS.shp')
-#Now you have to add some coordinate information to your CHIRPS datarray (in this case epsg:4326)
-da_rio = da.rio.write_crs("epsg:4326", inplace=True)
-#Now that the shapefile and dataframe have coordinates you can use rio.clip to cut the dataarray out in
-#using the shapefile
-da_clip = da.rio.clip(shape.geometry.apply(mapping), shape.crs)
 
-fig = plt.figure(figsize=(7,6))
+fig = plt.figure(figsize=(5,4))
 ax = plt.axes(projection=ccrs.PlateCarree())
-#Do a filled contour with chirps (same as first example)
-#alpha of less than 1 makes the contours a bit transparent so its easier to see the scatter
-da_clip.mean('time').plot.pcolormesh(cmap=plt.cm.viridis,ax=ax,transform=ccrs.PlateCarree(),
-                                alpha=1.0,cbar_kwargs={'label': "Mean CHIRPS mesh (mm/day)"})
-shape.plot(ax=ax, edgecolor='black', facecolor='none',lw=2,zorder=2,linestyle='--')
+shape.plot(ax=ax, edgecolor='red', facecolor='none',lw=2,zorder=2,linestyle='--')
 #Create a mesh of lat lons using the xarray of station data we made above
 #This is necessary because the xarray is a grid instead of a list
-lon, lat = np.meshgrid(diff_st.lon,diff_st.lat)
-diffp = ax.scatter(x=lon,y=lat,s=60,c=diff_st,vmin=-1.5,vmax=1.5,
-                   cmap=plt.cm.PRGn,edgecolors=None,transform=ccrs.PlateCarree())
-plt.colorbar(diffp,label='Mean CHIRPS-station (mm/day)')
+xrst_p = ax.scatter(x=lon,y=lat,s=60,c=xrst_mam,vmin=0,vmax=4,
+                    edgecolors=None,transform=ccrs.PlateCarree())
+plt.colorbar(xrst_p,label='MAM Station xarray (mm/day)',ax=ax)
 ax.coastlines()
 ax.add_feature(cartopy.feature.BORDERS)
 ax.add_feature(cartopy.feature.RIVERS)
@@ -280,9 +231,8 @@ gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
                   linewidth=1, color='black', alpha=0.5, linestyle='dotted')
 gl.top_labels = False
 gl.right_labels = False
-ax.set_extent([36, 38.5, 9, 13.5])
-plt.title('Difference between interpoloated \n CHIRPS and station '
-          'data \n over CHIRPS rainfall mesh \n for long term mean')
-plt.savefig(path+'plots/WSS_3.png', bbox_inches='tight',dpi=200)
+ax.set_extent([34, 42, 6, 14.5])
+plt.title('Station scatter (xarray) \n in MAM with Tana shape')
+plt.savefig(path+'plots/WSM_2.png', bbox_inches='tight',dpi=200)
 plt.show()
 plt.clf()

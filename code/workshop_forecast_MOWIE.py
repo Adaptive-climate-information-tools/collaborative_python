@@ -3,7 +3,7 @@ import pandas as pd
 import glob
 
 #Read in all variable forecast files
-path= "/Users/Amahoro/Desktop/new_files/ex/"
+path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/new_files/'
 stpr = pd.read_excel(glob.glob(path+"Awash*R*.xlsx")[0],header=None,index_col=False)
 stta = pd.read_excel(glob.glob(path+"Awash*Max*.xlsx")[0],header=None,index_col=False)
 stti = pd.read_excel(glob.glob(path+"Awash*Min*.xlsx")[0],header=None,index_col=False)

@@ -57,9 +57,9 @@ col_names_to_rename = ["LAT","LON","Year"]
 new_col_names = ["lat","lon","Years"]
 path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
 
-for dataset in ['WRF','OBS']:
+for dataset in ['OBS','WRF']:
     #You can read in spreadsheet station data as a .csv file here:
-    st = pd.read_csv(path+'new_files/'+dataset+'_Jun_2021.csv',header=0,index_col=False)
+    st = pd.read_csv(path+'new_files/'+dataset+'_Sep_2021.csv',header=0,index_col=False)
     #strip extra white space around entries
     st = trim_all_columns(st)
     #print head of the dataframe to see column names and values
@@ -67,12 +67,13 @@ for dataset in ['WRF','OBS']:
     #rename columns that usually have spelling mistakes
     st = st.rename(columns=rename_columns(st.columns,col_names_to_rename,new_col_names))
     #print(st.columns)
-    
+    #get days in month to use to pivot the spreadsheet using month number from file
+    daysinmonth = pd.Timestamp(int(np.nanmean(st.Years.values)), int(np.nanmean(st.Months.values)), 1).days_in_month
 
     ##Start rearranging the dataframe so we can work with it as an xarray and also
     #so that we can put in datetimes (useful later on)
     #melt moves around the headers so that days are now a column
-    newst = pd.melt(st,id_vars=['STATION','lon', 'lat', 'Years','Months'], value_vars=np.arange(1,32).astype('str'))
+    newst = pd.melt(st,id_vars=['STATION','lon', 'lat', 'Years','Months'], value_vars=np.arange(1,daysinmonth+1).astype('str'))
     #Can rename columns so that they have generic names
     newst = newst.rename(columns={"variable": "Day", "value": "PRECIP"})
     #print(newst.head())
@@ -82,7 +83,6 @@ for dataset in ['WRF','OBS']:
     date = pd.to_datetime(dict(year=newst.Years, month=newst.Months, day=newst.Day), errors='coerce')#,hour=newst.Time))
     #Add this list of datetimes to the dataframe
     newst['time'] = date.values
-    print(newst.head())
     #Now we no longer need the columns Years, Month, Day because we made a datetime with them
     newst = newst.drop(columns=['Years','Months','Day','STATION'])
     #Rearrange the columns in the order that makes sense for the work
@@ -103,7 +103,6 @@ for dataset in ['WRF','OBS']:
     #Now if we want to turn this into an xarray with PRECIP as the variable
     #we can set time, lat, and lon as index values
     newst_toxr_out = newst_out.set_index(['time','lat','lon'])
-     
             
     # ## Create an xarray or output the dataframe to a file
     # #Now the dataframe is setup to be easily converted to an xarray that

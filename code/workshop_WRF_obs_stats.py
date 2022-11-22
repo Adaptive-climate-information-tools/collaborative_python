@@ -59,7 +59,7 @@ path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WO
 
 for dataset in ['OBS','WRF']:
     #You can read in spreadsheet station data as a .csv file here:
-    st = pd.read_csv(path+'new_files/'+dataset+'_Sep_2021.csv',header=0,index_col=False)
+    st = pd.read_csv(path+'new_files/'+dataset+'_Jun_2021.csv',header=0,index_col=False)
     #strip extra white space around entries
     st = trim_all_columns(st)
     #print head of the dataframe to see column names and values
@@ -201,7 +201,7 @@ gl.right_labels = False
 #Change these values to plot a different section of the map
 ax.set_extent([33.5, 43.5, 3.5, 15])
 plt.title('Correlation between OBS and WRF shown with \n color of dots statistical significance shown \n by dot size (bigger=smaller pvalue)')
-plt.savefig(path+'plots/WWOF_1.png', bbox_inches='tight',dpi=200)
+plt.savefig(path+'plots/WWOS_1.png', bbox_inches='tight',dpi=200)
 plt.show()
 plt.clf()
 

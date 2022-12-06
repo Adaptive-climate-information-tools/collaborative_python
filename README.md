@@ -4,8 +4,8 @@ Files required for python workshop for climate information
 
 Setup files to use in setup before workshop in folder: [workshop_setup](https://github.com/ellendyer/python_workshop/tree/main/workshop_setup)
 
-Instructions are in the pdf (and an editable version in .doc). 
-> Download the document and follow the setup instructions.
+- Instructions are in the pdf (and an editable version in .doc). 
+- Download the document and follow the setup instructions.
 
 All code is located [here](https://github.com/ellendyer/python_workshop/tree/main/code)
 

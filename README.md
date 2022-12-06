@@ -13,4 +13,6 @@ Example plots are located [here](https://github.com/ellendyer/python_workshop/tr
 
 All shapefiles necessary to run this code are included for the [Awash Basin](https://github.com/ellendyer/python_workshop/tree/main/Awash), [Tana Basin](https://github.com/ellendyer/python_workshop/tree/main/LakeTana_WGS), and for [regional boundaries](https://github.com/ellendyer/python_workshop/tree/main/afr_g2014_2013_0).
 
+Instructions for using GitHub with Spyder are included [here](https://github.com/ellendyer/python_workshop/blob/main/Nov2022_workshop_files/workshop_github.docx)
+
 If you have any questions please email: ellen.dyer@ouce.ox.ac.uk

@@ -10,6 +10,8 @@ from scipy.stats import pearsonr, spearmanr
 from matplotlib import pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature
+from sklearn.metrics import mean_squared_error
+#%%
 
 #Here is a function definition - someone wrote this and shared it
 #to help other strip empty spaces from excel file fields
@@ -140,7 +142,7 @@ obs_stat = obs_xr.where(obs_xr.notnull(),drop=True)
 #Drop points in WRF where there is no observation data because these can't be compared anyway (only a small #)
 wrf_stat = wrf_stat.where(obs_stat.notnull(),drop=True) 
 
-
+#%%
 #*****Pearson Correlation Example (correlation at each point with obs)******
 #Create numpy arrays to fill with correlations and pvalues at each point and fill with nans for now 
 #Use the shape of observations at time 0 to make arrays of the right size
@@ -150,6 +152,7 @@ pv_out = np.zeros(obs_stat[0,:,:].shape)*np.nan
 #enumerate is useful - you can loop through the object (e.g. lat) and use that to select your xarray point
 #but you also get an integer counter that starts at 0 to index the numpy array where correlations and pvalues
 #are stored
+
 for y,Y in enumerate(obs_stat.lat):
     for x,X in enumerate(obs_stat.lon):
         #using a 'try' statement because some points only have nans (points without stations) and this will skip those
@@ -174,23 +177,96 @@ pv_xr = obs_stat[0,:,:].copy(data=pv_out)
 #****
 
 #%%
+#*****Root Mean Squared Error Example (at each point with obs)******
+#Create numpy arrays to fill with correlations and pvalues at each point and fill with nans for now 
+#Use the shape of observations at time 0 to make arrays of the right size
+rmse_out = np.zeros(obs_stat[0,:,:].shape)*np.nan
+#loop through all lat lon points and calculate correlation with WRF and OBS timeseries at each point
+#enumerate is useful - you can loop through the object (e.g. lat) and use that to select your xarray point
+#but you also get an integer counter that starts at 0 to index the numpy array where correlations and pvalues
+#are stored
+
+for y,Y in enumerate(obs_stat.lat):
+    for x,X in enumerate(obs_stat.lon):
+        #using a 'try' statement because some points only have nans (points without stations) and this will skip those
+        #and just put a nan value into the correlation and pvalue arrays - this happens in the 'except' below
+        try:
+            #if there are just a few nan entries (e.g. missing station data) get a list of these indexes 
+            #to skip in pearsonr - spearmanr can handle nans but pearsonr can't
+            nas = np.logical_or(np.isnan(wrf_stat.sel(lat=Y,lon=X)), np.isnan(obs_stat.sel(lat=Y,lon=X)))
+            #calculate the RMSE by setting squared=False in the sklearn function mean_squared_error
+            rmse_out[y,x] = mean_squared_error(obs_stat.sel(lat=Y,lon=X)[~nas],wrf_stat.sel(lat=Y,lon=X)[~nas],squared=False)
+        except:
+            rmse_out[y,x] = np.nan
+#To make plotting easy later can put the correlations and pvales from the numpy arrays into
+#xarrays using the function copy. Maybe a copy of OBS xarray at the first timestep to copy the 
+#metadata like lat and lon and then copy in the data from corr_out and pv_out.
+rmse_xr = obs_stat[0,:,:].copy(data=rmse_out)
+
+#%%
+#*****Mean Bias Example (at each point with obs)******
+#Create numpy arrays to fill with correlations and pvalues at each point and fill with nans for now 
+#Use the shape of observations at time 0 to make arrays of the right size
+bias_out = np.zeros(obs_stat[0,:,:].shape)*np.nan
+#loop through all lat lon points and calculate correlation with WRF and OBS timeseries at each point
+#enumerate is useful - you can loop through the object (e.g. lat) and use that to select your xarray point
+#but you also get an integer counter that starts at 0 to index the numpy array where correlations and pvalues
+#are stored
+
+for y,Y in enumerate(obs_stat.lat):
+    for x,X in enumerate(obs_stat.lon):
+        #using a 'try' statement because some points only have nans (points without stations) and this will skip those
+        #and just put a nan value into the correlation and pvalue arrays - this happens in the 'except' below
+        try:
+            #if there are just a few nan entries (e.g. missing station data) get a list of these indexes 
+            #to skip in pearsonr - spearmanr can handle nans but pearsonr can't
+            nas = np.logical_or(np.isnan(wrf_stat.sel(lat=Y,lon=X)), np.isnan(obs_stat.sel(lat=Y,lon=X)))
+            #calculate the RMSE by setting squared=False in the sklearn function mean_squared_error
+            bias_out[y,x] = (wrf_stat.sel(lat=Y,lon=X)[~nas] - obs_stat.sel(lat=Y,lon=X)[~nas]).mean('time')
+        except:
+            bias_out[y,x] = np.nan
+#To make plotting easy later can put the correlations and pvales from the numpy arrays into
+#xarrays using the function copy. Maybe a copy of OBS xarray at the first timestep to copy the 
+#metadata like lat and lon and then copy in the data from corr_out and pv_out.
+bias_xr = obs_stat[0,:,:].copy(data=bias_out)
+
+#%%
 #plot the results with xarrays and cartopy
 fig = plt.figure(figsize=(5,5))
 ax = plt.axes(projection=ccrs.PlateCarree())
 #Create a mesh of lat lons using the xarray of station data we made above
 #This is necessary because the xarray is a grid instead of a list
 lon, lat = np.meshgrid(corr_xr.lon,corr_xr.lat)
+#lon, lat = np.meshgrid(rmse_xr.lon,rmse_xr.lat)
+#lon, lat = np.meshgrid(bias_xr.lon,bias_xr.lat)
+
 #Use correlation values as the color of scatter points (c) and 
 #p-values as size of scatter points (s)
+#OR use RMSE values as the collor of scatter points - all the same size
 #cmap sets the colormap - using a diverging colormap here so it is
 #symmetric around zero because correlations can go from -1 to 1
 #set min and max color values to a smaller range of -0.7 to 0.7 so 
 #the points are easer to see.
-corrplot = ax.scatter(x=lon,y=lat,s=80*(1.-pv_xr),c=corr_xr,
+compplot = ax.scatter(x=lon,y=lat,s=80*(1.-pv_xr),c=corr_xr,
                       cmap=plt.cm.PuOr, alpha=0.9,
                       vmin=-.7,vmax=.7,
                       edgecolors='black',transform=ccrs.PlateCarree())
-plt.colorbar(corrplot,label='pearson correlation',ax=ax)
+
+# compplot = ax.scatter(x=lon,y=lat,s=80,c=rmse_xr,
+#                       cmap=plt.cm.magma_r, alpha=0.9,
+#                       vmin=2,vmax=18,
+#                       transform=ccrs.PlateCarree())
+
+# compplot = ax.scatter(x=lon,y=lat,s=80,c=bias_xr,
+#                       cmap=plt.cm.RdBu, alpha=0.9,
+#                       vmin=-6,vmax=6,
+#                       transform=ccrs.PlateCarree())
+
+
+plt.colorbar(compplot,label='pearson correlation',ax=ax)
+#plt.colorbar(compplot,label='RMSE',ax=ax,extend='both')
+#plt.colorbar(compplot,label='bias',ax=ax,extend='both')
+
 ax.coastlines()
 ax.add_feature(cartopy.feature.BORDERS)
 ax.add_feature(cartopy.feature.RIVERS)
@@ -201,7 +277,13 @@ gl.right_labels = False
 #Change these values to plot a different section of the map
 ax.set_extent([33.5, 43.5, 3.5, 15])
 plt.title('Correlation between OBS and WRF shown with \n color of dots statistical significance shown \n by dot size (bigger=smaller pvalue)')
+#plt.title('RMSE between WRF and OBS')
+#plt.title('Bias between WRF and OBS')
+
 plt.savefig(path+'plots/WWOS_1.png', bbox_inches='tight',dpi=200)
+#plt.savefig(path+'plots/WWOS_2.png', bbox_inches='tight',dpi=200)
+#plt.savefig(path+'plots/WWOS_3.png', bbox_inches='tight',dpi=200)
+
 plt.show()
 plt.clf()
 

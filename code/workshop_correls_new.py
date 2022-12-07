@@ -62,7 +62,7 @@ iodw = gsst.sel(latitude=slice(10,-10),longitude=slice(50,70)).mean(dim=('latitu
 iode = gsst.sel(latitude=slice(0,-10),longitude=slice(90,110)).mean(dim=('latitude','longitude'))
 iodi_mean = iodw - iode
 
-sst_mean = esst_mean
+sst_mean = iodi_mean
 
 #%%
 ##Step 4: calculate correlation of mean SST with Ethiopian rainfall
@@ -79,15 +79,15 @@ sstclim = sst_mean.groupby('time.month').mean('time')
 sst_mean_anom = sst_mean.groupby('time.month') - sstclim
 
 #Correlation of seasonal anomaly means
-p_eth_seas_anom = (p_eth_anom.sel(time=p_eth_anom.time.dt.month.isin([6,7,8,9]))).groupby('time.year').mean('time')
-sst_mean_seas_anom = (sst_mean_anom.sel(time=sst_mean_anom.time.dt.month.isin([3,4,5]))).groupby('time.year').mean('time')
+p_eth_seas_anom = (p_eth_anom.sel(time=p_eth_anom.time.dt.month.isin([3,4]))).groupby('time.year').mean('time')
+sst_mean_seas_anom = (sst_mean_anom.sel(time=sst_mean_anom.time.dt.month.isin([3,4]))).groupby('time.year').mean('time')
 correl_map = np.apply_along_axis(spearmanr,0, p_eth_seas_anom,sst_mean_seas_anom)
 # correl_map isn't an xarray - let's make it one
 da_r = xr.DataArray(data=correl_map[0],dims=["lat","lon"],coords={"lat":p_eth.lat,"lon":p_eth.lon})
 da_p = xr.DataArray(data=correl_map[1],dims=["lat","lon"],coords={"lat":p_eth.lat,"lon":p_eth.lon})
 
 #Plot correlation values where pvalues are less than 0.1
-da_r_sig = da_r#.where(da_p<0.1)
+da_r_sig = da_r.where(da_p<0.1)
 ax = plt.axes(projection=ccrs.PlateCarree())
 ax.coastlines()
 ax.add_feature(cartopy.feature.BORDERS,lw=2)

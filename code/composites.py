@@ -85,8 +85,8 @@ pos_comp_y = sort_index[-6:]['year']
 ##Step 5: Calculate a seasonal timeseries of the variable you are interested in compositing
 #In this example the variable is rainfall
 #Create a seasonal average timeseries and a long-term seasonal average
-months = [7,8,9]
-seas = 'JAS'
+#months = [7,8,9]
+#seas = 'JAS'
 rain_seas = da.sel(time=da.time.dt.month.isin(months)).groupby('time.year').mean('time')
 rain_seas_mean = rain_seas.mean('year')
 #Select the negative and positive composite years from the seasonal timeseries and create
@@ -114,7 +114,7 @@ plt.title(seas+' negative IOD composite rainfall')
 gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
                   linewidth=1, color='black', alpha=0.5, linestyle='dotted')
 # for extent the order is  [West,East,South,North]
-ax.set_extent([31, 48, 3, 16])
+ax.set_extent([31, 48, 3, 15])
 gl.top_labels = False
 gl.right_labels = False
 plt.savefig(path+'plots/C_1.png',bbox_inches='tight',dpi=200)
@@ -154,7 +154,7 @@ plt.title(seas+' positive IOD composite rainfall')
 gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
                   linewidth=1, color='black', alpha=0.5, linestyle='dotted')
 # for extent the order is  [West,East,South,North]
-ax.set_extent([31, 48, 3, 16])
+ax.set_extent([31, 48, 3, 15])
 gl.top_labels = False
 gl.right_labels = False
 plt.savefig(path+'plots/C_2.png',bbox_inches='tight',dpi=200)

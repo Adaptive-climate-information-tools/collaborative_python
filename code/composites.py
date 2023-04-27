@@ -29,6 +29,8 @@ da = da.sel(time=slice('1981-01-01','2019-12-31'))
 # print data array
 print(da)
 hsst = xr.open_dataset(path+'files/HadISST_sst.nc')['sst']
+#Read in datafile if it is in the same directory
+#hsst = xr.open_dataset('HadISST_sst.nc')['sst']
 hsst = hsst.sel(time=slice('1981-01-01','2019-12-31'))
 print(hsst)
 # convert degree C to Kelvin
@@ -83,7 +85,8 @@ pos_comp_y = sort_index[-6:]['year']
 ##Step 5: Calculate a seasonal timeseries of the variable you are interested in compositing
 #In this example the variable is rainfall
 #Create a seasonal average timeseries and a long-term seasonal average
-
+months = [7,8,9]
+seas = 'JAS'
 rain_seas = da.sel(time=da.time.dt.month.isin(months)).groupby('time.year').mean('time')
 rain_seas_mean = rain_seas.mean('year')
 #Select the negative and positive composite years from the seasonal timeseries and create
@@ -115,6 +118,8 @@ ax.set_extent([31, 48, 3, 16])
 gl.top_labels = False
 gl.right_labels = False
 plt.savefig(path+'plots/C_1.png',bbox_inches='tight',dpi=200)
+#Save in the same directory as code
+#plt.savefig('C_1.png',bbox_inches='tight',dpi=200)
 plt.show()
 plt.clf()
 

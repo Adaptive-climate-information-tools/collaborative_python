@@ -1,4 +1,4 @@
-# EMI / WLRC / REACH python workshop
+# EMI / WLRC / REACH python climate tools
 
 Files required for python workshop for climate information
 

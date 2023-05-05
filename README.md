@@ -1,4 +1,4 @@
-# EMI / WLRC / REACH python climate tools
+# Python climate tools for Ethiopia (REACH/WLRC/EMI/MOWIE)
 
 Files required for python workshop for climate information
 

@@ -256,9 +256,9 @@ xrst['lon'].attrs['axis'] = 'X'
 xrst.mean('time', skipna=True).plot()
 plt.show()
 plt.clf()
-xrst.to_netcdf(path+'files/out_flow_mult_mowie.nc',mode='w')
+xrst.to_netcdf(path+'files/out_flow_mult_mowe.nc',mode='w')
 #We can also output our dataframe in this new
 #organisation to an excel file (other formats available)
-data_topd.to_excel(path+'files/out_flow_mult_mowie.xlsx')
+data_topd.to_excel(path+'files/out_flow_mult_mowe.xlsx')
 
 

@@ -27,9 +27,9 @@ emi = emi.rio.write_crs("epsg:4326")
 mowie = xr.open_dataset(path+'files/out_flow_mult_mowie.nc')['flow_cumecs']
 mowie = mowie.rio.write_crs("epsg:4326")
 
-da = da.sel(time=slice('2000-01-01','2005-12-31'),drop=True)
-emi = emi.sel(time=slice('2000-01-01','2005-12-31'),drop=True)
-mowie = mowie.sel(time=slice('2000-01-01','2005-12-31'),drop=True)
+da = da.sel(time=slice('1990-01-01','2008-12-31'),drop=True)
+emi = emi.sel(time=slice('1990-01-01','2008-12-31'),drop=True)
+mowie = mowie.sel(time=slice('1990-01-01','2008-12-31'),drop=True)
 
 
 #%%
@@ -86,8 +86,8 @@ ax2.set_ylabel('flow (cumecs)', color=color)  # we already handled the x-label w
 ax2.plot(mowie_sbasin_ts.time,mowie_sbasin_ts, color=color)
 ax2.tick_params(axis='y', labelcolor=color)
 
-ax1.set_xticks(mowie_sbasin_ts['time'].values[::365])
-ax1.set_xticklabels(mowie_sbasin_ts['time.year'].values[::365], color="k")
+ax1.set_xticks(da_sbasin_ts['time'].values[::365])
+ax1.set_xticklabels(da_sbasin_ts['time.year'].values[::365], color="k",rotation=45)
 
 ax1.set_title(sbasin+' rainfall/flow comparison')
 fig.tight_layout()  # otherwise the right y-label is slightly clipped
@@ -96,7 +96,40 @@ plt.show()
 plt.clf()
 
 #%%
-#Step 6 compare map plot
+#Step 6 cumulation comparison plot
+
+#Plot the cummulative sum of flow and rainfall annual cycles for a few years of data
+
+rain_accu = da_sbasin_ts.groupby('time.year').sum('time')
+flow_accu = mowie_sbasin_ts.groupby('time.year').sum('time')
+
+
+fig, ax1 = plt.subplots(figsize=(8,4))
+width=0.4
+color = 'teal'
+ax1.set_xlabel('time')
+ax1.set_ylabel('precip (mm/day)', color=color)
+ax1.bar(rain_accu.year-width/2,rain_accu,width, color=color,alpha=0.6)
+ax1.tick_params(axis='y', labelcolor=color)
+
+ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+color = 'purple'
+ax2.set_ylabel('flow (cumecs)', color=color)  # we already handled the x-label with ax1
+ax2.bar(flow_accu.year+width/2,flow_accu,width, color=color,alpha=0.6)
+ax2.tick_params(axis='y', labelcolor=color)
+
+ax1.set_xticks(rain_accu['year'].values)
+ax1.set_xticklabels(rain_accu['year'].values, color="k",rotation=45)
+
+ax1.set_title(sbasin+' annual cumulative rainfall/flow comparison')
+fig.tight_layout()  # otherwise the right y-label is slightly clipped
+plt.savefig(path+'plots/MC_2.png', bbox_inches='tight',dpi=200)
+plt.show()
+plt.clf()
+
+#%%
+#Step 7 compare map plot
 
 #Select dates in chirps that match with streamflow (EMI timesries do not overlap with
 #MOWIE timeseries in the files I have)
@@ -133,7 +166,7 @@ gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
 gl.top_labels = False
 gl.right_labels = False
 fig.tight_layout()  # otherwise the right y-label is slightly clipped
-plt.savefig(path+'plots/MC_2.png', bbox_inches='tight',dpi=200)
+plt.savefig(path+'plots/MC_3.png', bbox_inches='tight',dpi=200)
 plt.show()
 plt.clf()
 

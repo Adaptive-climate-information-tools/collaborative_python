@@ -204,8 +204,8 @@ xrst['lon'].attrs['axis'] = 'X'
 # xrst.mean('time', skipna=True).plot()
 # plt.show()
 # plt.clf()
-xrst.to_netcdf(path+'files/out_mult_vars_mowie.nc',mode='w')
+xrst.to_netcdf(path+'files/out_mult_vars_mowe.nc',mode='w')
 #We can also output our dataframe in this new
 #organisation to a csv file (other formats available)
-newst_toxr.to_csv(path+'files/out_mult_vars_mowie.csv')
+newst_toxr.to_csv(path+'files/out_mult_vars_mowe.csv')
 

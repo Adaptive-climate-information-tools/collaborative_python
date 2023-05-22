@@ -20,6 +20,7 @@ import rioxarray
 path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
 ds = xr.open_dataset(path+'workshop_setup/workshop_chirps.nc')
 da = ds["precip"]
+
 # print data array
 print(da)
 
@@ -132,7 +133,14 @@ data.plot(ax=ax, edgecolor='darkorange', facecolor='none',lw=2,zorder=2,linestyl
 
 seas_anom_clip.plot(ax=ax,transform=ccrs.PlateCarree())
 # for extent the order is  [West,East,South,North]
-ax.set_extent([37.9, 43.5, 7.7, 12.3])
+#ax.set_extent([37.9, 43.5, 7.7, 12.3])
+ax.set_extent([33, 47, 3.5, 14.75])
+gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
+                  linewidth=1, color='black', alpha=0.5, linestyle='dotted')
+gl.top_labels = False
+gl.right_labels = False
+
+
 plt.show()
 plt.clf()
 
@@ -156,15 +164,23 @@ ax = plt.axes(projection=ccrs.PlateCarree())
 ax.coastlines()
 ax.add_feature(cartopy.feature.BORDERS)
 ax.add_feature(cartopy.feature.RIVERS)
+ax.add_feature(cartopy.feature.OCEAN)
 
 #Overlay with all ICPAC country outlines
-#data_eth = data.where(data['ADM0_NAME']=='Ethiopia')
-data_eth = data.where(data['ICPAC']==14)
-data_eth.plot(ax=ax, edgecolor='green', facecolor='none',lw=2,zorder=2,linestyle='-')
+data_eth = data.where(data['ADM0_NAME']=='Ethiopia')
+data_icpac = data.where(data['ICPAC']==14)
+data_eth.plot(ax=ax, edgecolor='none', facecolor='beige',lw=2,zorder=2,linestyle='-')
+data_icpac.plot(ax=ax, edgecolor='green', facecolor='none',lw=2,zorder=2,linestyle='-')
 
-seas_anom_clip.plot(ax=ax,transform=ccrs.PlateCarree())
+
+seas_anom_clip.plot(ax=ax,transform=ccrs.PlateCarree(),add_colorbar=False)
 # for extent the order is  [West,East,South,North]
-ax.set_extent([20, 50, -5, 17])
+ax.set_extent([20, 90, -5, 17])
+gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
+                  linewidth=1, color='black', alpha=0.5, linestyle='dotted')
+gl.top_labels = False
+gl.right_labels = False
+ax.set_title('')
 plt.show()
 plt.clf()
 

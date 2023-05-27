@@ -81,12 +81,13 @@ col_names_to_rename = ["Latitude","Longitude"]
 new_col_names = ["lat","lon"]
 variables_to_keep = 'PRECIP'
 #You can read in spreadsheet station data as a .csv file here:
-st = pd.read_csv(path+'station/NMA_Tana_basin.csv',header=0,index_col=False)
+#st = pd.read_csv(path+'station/NMA_Tana_basin.csv',header=0,index_col=False)
 
 #OR you can read in spreadsheet station data as an excel file here:
-#st = pd.read_excel("./NMA_Tana_basin.xlsx",header=0,index_col=False,sheet_name='data')
+path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
+st = pd.read_excel(path+"station/NMA_Tana_basin.xlsx",header=0,index_col=False,sheet_name='data')
 #IF you read in an excel file you need to make sure all the column names are strings
-# st.columns = st.columns.map(str)
+st.columns = st.columns.map(str)
 
 #strip extra white space around entries
 st = trim_all_columns(st)

@@ -70,7 +70,8 @@ lon1, lon2 = 32,50
 
 #Get a list of spreadsheets in the directory - first specify a directory path
 dir_p = path+'station/'
-list_f = glob.glob(dir_p+'*.csv')
+#list_f = glob.glob(dir_p+'*.csv')
+list_f = glob.glob(dir_p+'*xls*')
 
 #You can read in spreadsheet station data as a .csv file here
 #make a list to add all the files you read into
@@ -78,7 +79,9 @@ dataf_list = []
 #loop through the list of files:
 for fi in list_f[0:2]:
     print(fi)
-    st = pd.read_csv(fi,header=0,index_col=False)
+    # st = pd.read_csv(fi,header=0,index_col=False)
+    st = pd.read_excel(fi,header=0,index_col=False)
+    st.columns = st.columns.astype('str')
 
     #strip extra white space around entries
     st = trim_all_columns(st)
@@ -107,15 +110,20 @@ print(dataf)
 newst = pd.melt(dataf,id_vars=['Years', 'lat', 'lon', 'Month', 'Time'], value_vars=np.arange(1,32).astype('str'))
 #Can rename columns so that there is a better label for days and for data values
 newst = newst.rename(columns={"variable": "Day", "value": variables_to_keep})
-print(newst.head())
+print(newst.head(-40))
+#%%
 #Drop any rows that don't have values (because the month doesn't have 31 days for instance)
 newst = newst.dropna(axis=0)
+print(newst.head(-40))
+#%%
 #Make a list of dates for all values in the dataframe - could also include the hour
 date = pd.to_datetime(dict(year=newst.Years, month=newst.Month, day=newst.Day), errors='coerce')#,hour=newst.Time))
 #Add this list of datetimes to the dataframe
 newst['time'] = date.values
 #Now we no longer need the columns Years, Month, Day because we made a datetime with them
 newst = newst.drop(columns=['Years','Month','Day'])
+print(newst.head(-40))
+#%%
 #Rearrange the columns in the order that makes sense for the work
 newst = newst[['time','lat','lon',variables_to_keep]]
 #print(newst.head())
@@ -126,6 +134,8 @@ newst.sort_values(by=['time','lat','lon'],inplace=True)
 #can then drop the nans
 newst = newst.replace('', np.nan)
 newst = newst.dropna(axis=0)
+print(newst[1200:1220])
+#%%
 #Because PRECIP is the variable we want to later plot
 #we want to make sure all the values are marked as floats
 newst = newst.astype({variables_to_keep: 'float64'})
@@ -141,6 +151,7 @@ newst = newst.loc[(newst.lat>lat1)& (newst.lat<lat2)& (newst.lon>lon1)& (newst.l
 #Select date range if necessary
 newst_toxr = newst_toxr.loc['1996-01-01':'2018-12-31']
 print(newst_toxr.head())
+
 
 #%%
 ## Step 4: Create an xarray or output the dataframe to a file

@@ -34,8 +34,9 @@ def drop_columns(cols_indf,cols_todrop):
     drop_cols = []
     for s1 in cols_indf:
         for s2 in cols_todrop:
+            print(s1,s2)
             jac_sim = len(set(s1.lower()) & set(s2.lower())) / len(set(s1.lower()) | set(s2.lower()))
-            #print(s1,s2,jac_sim)
+            print(jac_sim)
             if jac_sim > 0.8:
                 drop_cols.append(s1) 
     print('*****dropping columns: ',drop_cols)
@@ -69,7 +70,8 @@ lon1, lon2 = 32,50
 
 #Get a list of spreadsheets in the directory - first specify a directory path
 dir_p = path+'station/'
-list_f = glob.glob(dir_p+'*.csv')
+# list_f = glob.glob(dir_p+'*.csv')
+list_f = glob.glob(dir_p+'*xls*')
 
 #You can read in spreadsheet station data as a .csv file here
 #make a list to add all the files you read into
@@ -77,8 +79,9 @@ dataf_list = []
 #loop through the list of files:
 for fi in list_f:
     print(fi)
-    st = pd.read_csv(fi,header=0,index_col=False)
-
+    # st = pd.read_csv(fi,header=0,index_col=False)
+    st = pd.read_excel(fi,header=0,index_col=False)
+    st.columns = st.columns.astype('str')
     #strip extra white space around entries
     st = trim_all_columns(st)
     #print head of the dataframe to see column names and values
@@ -150,7 +153,7 @@ print(newst_toxr.head())
 #If you want to keep multiple variables - create an xarray Dataset
 xrst = xr.Dataset.from_dataframe(newst_toxr)
 #If you only want to keep one variable - create an xarray DataArray and give variable name
-#xrst = newst_toxr.to_dataset()['PRECIP']
+#xrst = newst_toxr.to_xarray()['PRECIP']
 #dropping all dimensions with all nan values because xarray has made a mesh
 xrst = xrst.dropna('lat','all')
 xrst = xrst.dropna('lon','all')
@@ -171,10 +174,11 @@ months = [3,4,5]
 xrst = xrst['PRECIP']
 #select from dataframe created above for plotting
 newst = newst[newst['Elements'] == 'PRECIP']
+newst = newst.drop(columns=['Elements'])
 #Taking long term MAM mean for station data xarray
 xrst_mam = xrst.sel(time=np.in1d(xrst['time.month'], months)).mean('time')
 #Do the same thing for the dataframe - it is a bit different in format
-newst_mam = newst.loc[(newst.index.month.isin([3,4,5]))].groupby(['lat','lon']).mean().reset_index()
+newst_mam = newst.loc[(newst.index.month.isin(months))].groupby(['lat','lon']).mean().reset_index()
 
 
 #%%
@@ -195,11 +199,11 @@ plt.colorbar(xrst_p,label='MAM Station xarray (mm/day)',ax=ax)
 
 
 #For a scatter from the dataframe we need to select the index values for lat and lon
-newst_p = ax.scatter(x=newst_mam['lon'],
-                      y=newst_mam['lat'],
-                      s=60,c=newst_mam['value'],vmin=0,vmax=4,
-                      edgecolors='black',transform=ccrs.PlateCarree())
-plt.colorbar(newst_p,label='MAM Station dataframe (mm/day)',ax=ax)
+# newst_p = ax.scatter(x=newst_mam['lon'],
+#                       y=newst_mam['lat'],
+#                       s=60,c=newst_mam['value'],vmin=0,vmax=4,
+#                       edgecolors='black',transform=ccrs.PlateCarree())
+# plt.colorbar(newst_p,label='MAM Station dataframe (mm/day)',ax=ax)
 #*** You can't see both scatters because they are on top of each other - comment each one
 #    out at a time and plot to see if you can see a difference in them
 #Now we add all the cartopy information we did last time and add in some gridlines so it

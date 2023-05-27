@@ -28,6 +28,7 @@ da = da.sel(time=slice('1981-01-01','2019-12-31'))
 # print data array
 print(da)
 hsst = xr.open_dataset(path+'files/HadISST_sst.nc')['sst']
+
 print(hsst)
 # convert degree C to Kelvin
 hsst = hsst + 273.15

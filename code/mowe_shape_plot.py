@@ -25,7 +25,7 @@ da = da.rio.write_crs("epsg:4326")
 # print data array
 print(da)
 
-pathshape = "mowie_files/Shape_files/"
+pathshape = "mowe_files/Shape_files/"
 data = gpd.read_file(path+pathshape+'Awash_River_Basin.shp')
 print(data.keys())
 print(data['Name'].values)

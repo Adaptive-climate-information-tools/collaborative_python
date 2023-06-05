@@ -184,7 +184,7 @@ def process_block(data_in, block_start, block_stop, filename):
 #These files are missing lat lon lines/values: "Awash u.s. kokadam","Awash@Ginchi","Teji"
 name = ["Akaki","Awash below kokadam","Awash@Hombole","Berga","Holeta","Mojo@MojoVillage","Mutinicha"]
 path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
-filepath = "mowie_files/"
+filepath = "mowe_files/"
 ###END OF SECTION OF CODE TO EDIT BEFORE YOU RUN###
 
 

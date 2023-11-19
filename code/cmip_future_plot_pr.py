@@ -1,5 +1,5 @@
 #%%
-import sys
+#import sys
 import os
 import glob
 import xarray as xr
@@ -8,11 +8,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature
-import geopandas as gpd
-from shapely.geometry import mapping
-import datetime
-import seaborn as sns
-from scipy.stats import spearmanr
 import matplotlib as mpl
 mpl.rcParams['font.size'] = 10
 mpl.rcParams['legend.fontsize'] = 10
@@ -23,59 +18,60 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
 #%%
 ##HISTORICAL CMIP6 READ IN
-path = '/Volumes/blue_wd/cmip6_museum/'
-filename = 'pr_mods_Historical_*.nc'
+path = '/Users/ellendyer/Desktop/Nov23_Python/collaborative_python/cmip_files/cmip_hist_nc_files/'
+filename = 'pr_Amon_*'
 list_f = glob.glob(os.path.join(path,filename))
 
 chl = []
 daterange = pd.date_range(start='1980-01-01', end='2014-12-31', freq='MS')
-#cmipH = xr.Dataset()
 for m in list_f:
-  #print(m)
-  mname=m[49:-3]
+  mname = m.split("_")[-6]
   print(mname)
   inH = xr.open_dataset(m)['pr']
   inH = inH.resample(time="MS").mean()
   inH = inH.expand_dims(dim="model")
   inH = inH.assign_coords(M=('model',[mname]))
   inH['time'] = daterange
-  inH.sel(lat=slice(-12,22),lon=slice(22,53)).to_netcdf('/Volumes/blue_wd/meron_files/pr_Historical_'+mname+'.nc')
+  inH.sel(lat=slice(-12,22),lon=slice(22,53)).to_netcdf('../cmip_files/cmip_hist_nc_files/new/pr_Historical_'+mname+'.nc',mode='w')
   chl.append(inH)
   #print(inH.time)
 cmipHin=xr.concat(chl,dim='model')
 
-print(cmipHin)
+#print(cmipHin)
 
 #%%
 ##SSP585 CMIP6 READ IN
-path = '/Volumes/blue_wd/cmip6_museum/'
-filename = 'pr_mods_SSP585_*.nc'
+path = '/Users/ellendyer/Desktop/Nov23_Python/collaborative_python/cmip_files/cmip_sp585_nc_files/'
+filename = 'pr_Amon_*'
 list_f = glob.glob(os.path.join(path,filename))
 
 chl = []
-daterange = pd.date_range(start='2066-01-01', end='2100-12-31', freq='MS')
-#cmipH = xr.Dataset()
+daterange = pd.date_range(start='2015-01-01', end='2099-12-31', freq='MS')
 for m in list_f:
-  try:
-      #print(m)
-      mname=m[45:-3]
-      print(mname)
-      inH = xr.open_dataset(m)['pr']
-      inH = inH.resample(time="MS").mean()
-      inH = inH.expand_dims(dim="model")
-      inH = inH.assign_coords(M=('model',[mname]))
-      #print(len(inH.time))
-      inH['time'] = daterange
-      inH.sel(lat=slice(-12,22),lon=slice(22,53)).to_netcdf('/Volumes/blue_wd/meron_files/pr_SSP585_'+mname+'.nc')
-      chl.append(inH)
-  except:
+    try:
+        mname = m.split("_")[-6]
+        print(mname)
+        inH = xr.open_dataset(m)['pr']
+        inH = inH.resample(time="MS").mean()
+        inH = inH.expand_dims(dim="model")
+        inH = inH.assign_coords(M=('model',[mname]))
+        #print(len(inH.time))
+        inH['time'] = daterange
+        inH.sel(lat=slice(-12,22),lon=slice(22,53)).to_netcdf('../cmip_files/cmip_sp585_nc_files/new/pr_Historical_'+mname+'.nc',mode='w')
+        chl.append(inH)
+    except:
       print('model bad time')
 cmipFin=xr.concat(chl,dim='model')
 
 
-print(cmipFin)
+#print(cmipFin)
 
 #%%
+
+models = list((set(cmipFin.M.values.tolist())).intersection(set(cmipHin.M.values.tolist())))
+cmipHin = cmipHin.sel(M=np.in1d(cmipHin['M'], models))
+cmipFin = cmipFin.sel(M=np.in1d(cmipFin['M'], models))
+
 
 seas = 'OND'
 seasT = 'October-December'

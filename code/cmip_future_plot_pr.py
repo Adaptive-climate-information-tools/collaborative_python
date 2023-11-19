@@ -27,12 +27,13 @@ daterange = pd.date_range(start='1980-01-01', end='2014-12-31', freq='MS')
 for m in list_f:
   mname = m.split("_")[-6]
   print(mname)
-  inH = xr.open_dataset(m)['pr']
+  inH = xr.open_dataset(m)['pr']*84600.0
   inH = inH.resample(time="MS").mean()
   inH = inH.expand_dims(dim="model")
   inH = inH.assign_coords(M=('model',[mname]))
   inH['time'] = daterange
-  inH.sel(lat=slice(-12,22),lon=slice(22,53)).to_netcdf('../cmip_files/cmip_hist_nc_files/new/pr_Historical_'+mname+'.nc',mode='w')
+  inH = inH.sel(lat=slice(-12,26),lon=slice(21,61)).interp(lat=np.arange(-12,26,1),lon=np.arange(22,61,1), method="linear")
+  inH.to_netcdf('../cmip_files/cmip_hist_nc_files/new/pr_Historical_'+mname+'.nc',mode='w')
   chl.append(inH)
   #print(inH.time)
 cmipHin=xr.concat(chl,dim='model')
@@ -46,18 +47,20 @@ filename = 'pr_Amon_*'
 list_f = glob.glob(os.path.join(path,filename))
 
 chl = []
-daterange = pd.date_range(start='2015-01-01', end='2099-12-31', freq='MS')
+daterange = pd.date_range(start='2066-01-01', end='2099-12-31', freq='MS')
 for m in list_f:
     try:
         mname = m.split("_")[-6]
         print(mname)
-        inH = xr.open_dataset(m)['pr']
+        inH = xr.open_dataset(m)['pr']*84600.0
         inH = inH.resample(time="MS").mean()
+        inH = inH.sel(time=slice('2066-01-01','2099-12-31'))
         inH = inH.expand_dims(dim="model")
         inH = inH.assign_coords(M=('model',[mname]))
         #print(len(inH.time))
         inH['time'] = daterange
-        inH.sel(lat=slice(-12,22),lon=slice(22,53)).to_netcdf('../cmip_files/cmip_sp585_nc_files/new/pr_Historical_'+mname+'.nc',mode='w')
+        inH = inH.sel(lat=slice(-12,26),lon=slice(21,61)).interp(lat=np.arange(-12,26,1),lon=np.arange(22,61,1), method="linear")
+        inH.to_netcdf('../cmip_files/cmip_sp585_nc_files/new/pr_Historical_'+mname+'.nc',mode='w')
         chl.append(inH)
     except:
       print('model bad time')
@@ -68,10 +71,9 @@ cmipFin=xr.concat(chl,dim='model')
 
 #%%
 
-models = list((set(cmipFin.M.values.tolist())).intersection(set(cmipHin.M.values.tolist())))
-cmipHin = cmipHin.sel(M=np.in1d(cmipHin['M'], models))
-cmipFin = cmipFin.sel(M=np.in1d(cmipFin['M'], models))
-
+# models = list((set(cmipFin.M.values.tolist())).intersection(set(cmipHin.M.values.tolist())))
+# cmipHin = cmipHin.sel(model=np.in1d(cmipHin['M'], models),drop=True)
+# cmipFin = cmipFin.sel(model=np.in1d(cmipFin['M'], models),drop=True)
 
 seas = 'OND'
 seasT = 'October-December'
@@ -133,7 +135,7 @@ ax.add_feature(cartopy.feature.LAKES,lw=1)
 ax.add_feature(cartopy.feature.RIVERS,lw=1)
 #cmap = plt.get_cmap('Greens').copy()
 #cmap.set_extremes(under='brown')
-cmip_diff_ens.plot(ax=ax,cmap=plt.cm.RdYlBu,transform=ccrs.PlateCarree()
+cmip_diff_ens.plot.pcolormesh(ax=ax,cmap=plt.cm.RdYlBu,transform=ccrs.PlateCarree()
                ,vmin=-1,vmax=1
                ,extend='both'
                ,robust=True,cbar_kwargs={'orientation':'horizontal'
@@ -141,8 +143,8 @@ cmip_diff_ens.plot(ax=ax,cmap=plt.cm.RdYlBu,transform=ccrs.PlateCarree()
                                          ,'pad':0.09
                                          ,'label': ""})
 thresh_agree_point.plot.contourf(levels=[0.5,1.5],hatches=["////"],
-                                 alpha=0.0,
-                                 colors='none',add_colorbar=False)
+                                  alpha=0.0,
+                                  colors='none',add_colorbar=False)
 ax.set_title(seasT+' rainfall change',fontsize=9)
 
 
@@ -154,9 +156,9 @@ gl.xlocator = mticker.FixedLocator([25,35,45,55])
 gl.ylocator = mticker.FixedLocator([-10,0,10,20])
 gl.xformatter = LONGITUDE_FORMATTER
 gl.yformatter = LATITUDE_FORMATTER
-ax.set_extent([22, 60, -15, 22])
+ax.set_extent([22, 60, -10, 22])
 plt.text(15,-21, 'mm/day', dict(size=9))
-plt.savefig('cmip_diff_'+seas+'.png',bbox_inches='tight',dpi=300)
+plt.savefig('../plots/cmip_diff_'+seas+'.png',bbox_inches='tight',dpi=300)
 plt.show()
 plt.clf()
 

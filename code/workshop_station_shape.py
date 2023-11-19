@@ -59,7 +59,7 @@ def rename_columns(cols_indf,cols_torename,cols_newnames):
 #(edit the path to the file correctly depending on where you saved it) 
 #and select the variable ‘precip’. Now we have a data array called da and
 #we can print it to see what we have:
-path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
+path = '/Users/ellendyer/Desktop/Nov23_Python/collaborative_python/'
 da = xr.open_dataarray(path+'workshop_setup/workshop_chirps.nc')
 #convert from mm/month to mm/day
 da = da/da.time.dt.daysinmonth
@@ -84,7 +84,7 @@ variables_to_keep = 'PRECIP'
 #st = pd.read_csv(path+'station/NMA_Tana_basin.csv',header=0,index_col=False)
 
 #OR you can read in spreadsheet station data as an excel file here:
-path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
+path = '/Users/ellendyer/Desktop/Nov23_Python/collaborative_python/'
 st = pd.read_excel(path+"station/NMA_Tana_basin.xlsx",header=0,index_col=False,sheet_name='data')
 #IF you read in an excel file you need to make sure all the column names are strings
 st.columns = st.columns.map(str)

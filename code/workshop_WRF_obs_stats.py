@@ -57,7 +57,7 @@ def rename_columns(cols_indf,cols_torename,cols_newnames):
 
 col_names_to_rename = ["LAT","LON","Year"]
 new_col_names = ["lat","lon","Years"]
-path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
+path = '/Users/ellendyer/Desktop/Nov23_Python/collaborative_python/'
 
 for dataset in ['OBS','WRF']:
     #You can read in spreadsheet station data as a .csv file here:

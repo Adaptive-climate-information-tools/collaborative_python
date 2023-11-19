@@ -182,7 +182,7 @@ def process_block(data_in, block_start, block_stop, filename):
     return data_df
 
 name = ["MEGECH","Akaki"]
-path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
+path = '/Users/ellendyer/Desktop/Nov23_Python/collaborative_python/'
 filepath = "new_files/"
 ###END OF SECTION OF CODE TO EDIT BEFORE YOU RUN###
 

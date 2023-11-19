@@ -60,7 +60,7 @@ def rename_columns(cols_indf,cols_torename,cols_newnames):
 
 #Define some important parameters, variables you want to use and columns you want
 #to drop or rename for all files here
-path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
+path = '/Users/ellendyer/Desktop/Nov23_Python/collaborative_python/'
 col_names_to_drop = ['Stations','ID','Monthly total','Elevation']
 col_names_to_rename = ["Latitude","Longitude"]
 new_col_names = ["lat","lon"]

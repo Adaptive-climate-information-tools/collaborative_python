@@ -17,7 +17,7 @@ import rioxarray
 #(edit the path to the file correctly depending on where you saved it) 
 #and select the variable ‘precip’. Now we have a data array called da and
 #we can print it to see what we have:
-path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
+path = '/Users/ellendyer/Desktop/Nov23_Python/collaborative_python/'
 ds = xr.open_dataset(path+'workshop_setup/workshop_chirps.nc')
 da = ds["precip"]
 

@@ -67,7 +67,7 @@ ax.set_extent([37.5, 41, 7.5, 10])
 #pathshape = "mowie_files/shape file awash awash sub basin/"
 #data = gpd.read_file(path+pathshape+'basin_awash.shp')
 ###Contains: Akaki, Awash US Koka, Mojo
-pathshape = "mowie_files/Shape_files/"
+pathshape = "mowe_files/Shape_files/"
 data = gpd.read_file(path+pathshape+'Sub-basins.shp')
 #change the projection so the shapefile has lat lons instead of 
 #coordinates like most of the data that will be clipped

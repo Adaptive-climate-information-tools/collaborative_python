@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 #and apply evaluation code to
 #XESMF can easily deal with the Lambert Conformal grid used by WRF
 #https://xesmf.readthedocs.io/en/latest/why.html?highlight=wrf#for-emerging-new-grid-types
-path = '/Users/ellendyer/Library/Mobile Documents/com~apple~CloudDocs/1SHARED_WORK/Work/REACH/Workshop_conda_python/'
+path = '/Users/ellendyer/Desktop/Nov23_Python/collaborative_python/'
 path_wrf = '/Volumes/passport_ellen/'
 ds = xr.open_dataset(path_wrf+'wrfout_d02_2022102006',engine='netcdf4')
 #Select variable that you want from WRF file

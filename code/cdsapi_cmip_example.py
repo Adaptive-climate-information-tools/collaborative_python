@@ -54,7 +54,7 @@ for var in ['precipitation','surface_temperature']:
         with zipfile.ZipFile('temp.zip', 'r') as zip_ref:
             for i in zip_ref.namelist():
                 if i[-3:]=='.nc':
-                    zip_ref.extract(i,path='cmip_hist_nc_files')        
+                    zip_ref.extract(i,path='../cmip_files/cmip_hist_nc_files')        
         
 for var in ['precipitation','surface_temperature']:
     for mod in ['hadgem3_gc31_mm','cesm2', 'canesm5', 'cnrm_cm6_1_hr','mpi_esm1_2_lr',
@@ -115,7 +115,7 @@ for var in ['precipitation','surface_temperature']:
         with zipfile.ZipFile('temp.zip', 'r') as zip_ref:
             for i in zip_ref.namelist():
                 if i[-3:]=='.nc':
-                    zip_ref.extract(i,path='cmip_sp585_nc_files')        
+                    zip_ref.extract(i,path='../cmip_files/cmip_sp585_nc_files')        
 
         
         

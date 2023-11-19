@@ -76,8 +76,14 @@ else:
 #%%
 #Step 5: compare timeseries of data in the sub-basins
 
-#sbasin timeseries
-da_sbasin_ts = da_sbasin.mean(dim=('lat','lon'))
+# sub-basin timeseries
+
+# For rainfall you can either do a basin wide mean
+#da_sbasin_ts = da_sbasin.mean(dim=('lat','lon'))
+# OR a basin wide sum (how much rain accumulates in the whole
+# basin at each timestep)
+da_sbasin_ts = da_sbasin.sum(dim=('lat','lon'))
+
 mowie_sbasin_ts = mowie_sbasin.mean(dim=('lat','lon'))
 
 #Drop nans in the mowie timeseires

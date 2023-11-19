@@ -1,12 +1,14 @@
+#import pandas as pd
 import sys
 import xarray as xr
 import netCDF4
 import pandas as pd
-#------------------
-import requests
+
 
 def fix_calendar(ds, timevar):
     if ds[timevar].attrs['calendar'] == '360':
+        ds[timevar].attrs['calendar'] = '360_day'
+    if ds[timevar].attrs['calendar'] == 'standard':
         ds[timevar].attrs['calendar'] = '360_day'
     return ds
 
@@ -54,7 +56,7 @@ print(ds)
 ds = ds.rename({'T':'time'})
 ds = ds.rename({'X':'lon'})
 ds = ds.rename({'Y':'lat'})
-ds = ds.sel(lat=slice(15,4),lon=slice(32,50))
+ds = ds.sel(lat=slice(4,15),lon=slice(32,50))
 print(ds)
 
 # Download CHIRTS temperature daily (also use this method for daily CHIRPS)
@@ -72,34 +74,3 @@ ds = ds.rename({'X':'lon'})
 ds = ds.rename({'Y':'lat'})
 ds = ds.sel(lat=slice(4,15),lon=slice(32,50))
 print(ds)
-
-# Download TAMSAT rainfall daily
-url = "https://iridl.ldeo.columbia.edu/SOURCES/.Reading/.Meteorology/.TAMSAT/.v3p1/.daily/.rfe/dods"
-
-ds = xr.open_dataset(url)
-print(ds.T)
-pdtime = pd.to_datetime(ds.T,origin='julian',unit='D')
-ds['T'] = pdtime
-print(ds)
-ds = ds.sel(T=ds.T.dt.month.isin([3,4,5]))
-print(ds)
-ds = ds.rename({'T':'time'})
-ds = ds.rename({'X':'lon'})
-ds = ds.rename({'Y':'lat'})
-ds = ds.sel(lat=slice(4,15),lon=slice(32,50))
-print(ds)
-
-# # Download TAMSAT rainfall daily
-# url = "https://iridl.ldeo.columbia.edu/SOURCES/.ECMWF/.S2S/.NCEP/.reforecast/.perturbed/.sfc_precip/.tp/dods"
-
-# session = requests.Session()
-# session.auth = ('ellen.dyer@ouce.ox.ac.uk','SillyCat')
-# store = xr.backends.PydapDataStore.open(url,session=session)
-# ds = xr.open_dataset(store)
-# print(ds)
-
-# from pydap.client import open_url
-# from pydap.cas.urs import setup_session
-# session = setup_session(username='ellen.dyer@ouce.ox.ac.uk',password='SillyCat',check_url='https://iridl.ldeo.columbia.edu/auth/login')
-# ds = open_url(url,session)
-

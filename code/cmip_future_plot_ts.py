@@ -27,7 +27,7 @@ from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 path = '/Users/ellendyer/Desktop/Nov23_Python/collaborative_python/cmip_files/cmip_hist_nc_files/'
 #All the files have different names but they start with the same string so you can use * to
 #list them all
-filename = 'pr_Amon_*'
+filename = 'ts_Amon_*'
 #Try printing list_f to see what glob.glob does
 list_f = glob.glob(os.path.join(path,filename))
 
@@ -43,8 +43,8 @@ for m in list_f:
   #This will extract the name of the model from the file name
   mname = m.split("_")[-6]
   print(mname)
-  #Convert from kg/m2/s to mm/day x 86400.0
-  inH = xr.open_dataset(m)['pr']*84600.0
+  #Convert from K to C - 273K
+  inH = xr.open_dataset(m)['ts']-273
   #We don't really have to resample because we are using monthly data but
   #it is here in case you read in daily data
   inH = inH.resample(time="MS").mean()
@@ -60,7 +60,7 @@ for m in list_f:
   #uniform grid for each model so math can be done with all the models
   inH = inH.sel(lat=slice(-10,26),lon=slice(21,61)).interp(lat=np.arange(-10,26,1),lon=np.arange(22,61,1), method="linear")
   #Save these nicely formatted individual model files to a new directory for use later
-  inH.to_netcdf('../cmip_files/cmip_hist_nc_files/new/pr_Historical_'+mname+'.nc',mode='w')
+  inH.to_netcdf('../cmip_files/cmip_hist_nc_files/new/ts_Historical_'+mname+'.nc',mode='w')
   #Add the array for this model to the list of model arrays
   chl.append(inH)
 #Concatenate all the invididual model arrays together into one arrah
@@ -75,7 +75,7 @@ cmipHin=xr.concat(chl,dim='model')
 #for the paths and date range
 
 path = '/Users/ellendyer/Desktop/Nov23_Python/collaborative_python/cmip_files/cmip_sp585_nc_files/'
-filename = 'pr_Amon_*'
+filename = 'ts_Amon_*'
 list_f = glob.glob(os.path.join(path,filename))
 
 chl = []
@@ -84,14 +84,14 @@ for m in list_f:
     try:
         mname = m.split("_")[-6]
         print(mname)
-        inH = xr.open_dataset(m)['pr']*84600.0
+        inH = xr.open_dataset(m)['ts']-273
         inH = inH.resample(time="MS").mean()
         inH = inH.sel(time=slice('2066-01-01','2099-12-31'))
         inH = inH.expand_dims(dim="model")
         inH = inH.assign_coords(model=('model',[mname]))
         inH['time'] = daterange
         inH = inH.sel(lat=slice(-10,26),lon=slice(21,61)).interp(lat=np.arange(-10,26,1),lon=np.arange(22,61,1), method="linear")
-        inH.to_netcdf('../cmip_files/cmip_sp585_nc_files/new/pr_sp585_'+mname+'.nc',mode='w')
+        inH.to_netcdf('../cmip_files/cmip_sp585_nc_files/new/ts_sp585_'+mname+'.nc',mode='w')
         chl.append(inH)
     except:
       print('model bad time')
@@ -179,13 +179,13 @@ ax.add_feature(cartopy.feature.RIVERS,lw=1)
 
 #Select a python colormap (https://matplotlib.org/stable/gallery/color/colormap_reference.html)
 #and we also modify it to set values over the max value to be a contrast colour
-cmap = plt.get_cmap('RdYlBu').copy()
-cmap.set_extremes(over='green')
+cmap = plt.get_cmap('YlOrRd').copy()
+cmap.set_extremes(over='pink')
 
 #Plot the ensemble difference using a colourmesh - you could use 
 #a filled contour plot too
 cmip_diff_ens.plot.pcolormesh(ax=ax,cmap=cmap,transform=ccrs.PlateCarree()
-               ,vmin=-2,vmax=2
+               ,vmin=0,vmax=5
                ,extend='both'
                ,robust=True,cbar_kwargs={'orientation':'horizontal'
                                          ,'fraction':0.04
@@ -198,7 +198,7 @@ thresh_agree_point.plot.contourf(levels=[0.5,1.5],hatches=["////"],
                                   colors='none',add_colorbar=False)
 
 #Set the plot title - using the season name set earlier in the code
-ax.set_title(seasT+' rainfall change',fontsize=9)
+ax.set_title(seasT+' temperature change',fontsize=9)
 
 #Set the grid lines on the plot (style and location)
 gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
@@ -214,11 +214,11 @@ gl.yformatter = LATITUDE_FORMATTER
 ax.set_extent([22, 60, -8, 20])
 
 #Annotate the colourbar with a unit (x,y,label,textsize)
-plt.text(20,-12, 'mm/day', dict(size=9))
+plt.text(22,-13, '$^\circ$C', dict(size=11))
 
 #Save the figure - set your own path!
 #This uses the season acronym set earlier in the code
-plt.savefig('../plots/cmip_Fdiff_pr_'+seas+'.png',bbox_inches='tight',dpi=300)
+plt.savefig('../plots/cmip_Fdiff_ts_'+seas+'.png',bbox_inches='tight',dpi=300)
 
 #Preview the plot
 plt.show()
@@ -247,8 +247,7 @@ cmipF_eV.plot.pcolormesh(ax=ax,cmap=cmap,transform=ccrs.PlateCarree()
                                          ,'pad':0.09
                                          ,'label': ""})
 
-ax.set_title(seasT+'\n spread in future rainfall',fontsize=9)
-
+ax.set_title(seasT+'\n spread in future temperature',fontsize=9)
 
 gl = ax.gridlines(crs=ccrs.PlateCarree(), draw_labels=True,
                   linewidth=1, color='black', alpha=0.5, linestyle='--')
@@ -258,9 +257,9 @@ gl.xlocator = mticker.FixedLocator([25,35,45,55])
 gl.ylocator = mticker.FixedLocator([-10,0,10,20])
 gl.xformatter = LONGITUDE_FORMATTER
 gl.yformatter = LATITUDE_FORMATTER
-ax.set_extent([22, 60, -8, 22])
-plt.text(20,-13, 'mm/day', dict(size=9))
-plt.savefig('../plots/cmip_F_pr_spread_'+seas+'.png',bbox_inches='tight',dpi=300)
+ax.set_extent([22, 60, -8, 20])
+plt.text(22,-13, '$^\circ$C', dict(size=11))
+plt.savefig('cmip_F_ts_spread_'+seas+'.png',bbox_inches='tight',dpi=300)
 plt.show()
 plt.clf()
 

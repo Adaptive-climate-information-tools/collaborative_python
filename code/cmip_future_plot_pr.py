@@ -11,11 +11,14 @@ from matplotlib import pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature
 import matplotlib as mpl
+from scipy import stats
 mpl.rcParams['font.size'] = 10
 mpl.rcParams['legend.fontsize'] = 10
 mpl.rcParams['figure.titlesize'] = 10
 import matplotlib.ticker as mticker
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+from matplotlib.ticker import PercentFormatter
+
 
 #We will be taking a difference between future and historical time slices (slices
 #of time that are the same length) so we will open each of these sets of model 
@@ -80,6 +83,7 @@ list_f = glob.glob(os.path.join(path,filename))
 
 chl = []
 daterange = pd.date_range(start='2066-01-01', end='2099-12-31', freq='MS')
+#daterange = pd.date_range(start='2015-01-01', end='2099-12-31', freq='MS')
 for m in list_f:
     try:
         mname = m.split("_")[-6]
@@ -87,6 +91,7 @@ for m in list_f:
         inH = xr.open_dataset(m)['pr']*84600.0
         inH = inH.resample(time="MS").mean()
         inH = inH.sel(time=slice('2066-01-01','2099-12-31'))
+        #inH = inH.sel(time=slice('2015-01-01','2099-12-31'))
         inH = inH.expand_dims(dim="model")
         inH = inH.assign_coords(model=('model',[mname]))
         inH['time'] = daterange
@@ -263,4 +268,44 @@ plt.text(20,-13, 'mm/day', dict(size=9))
 plt.savefig('../plots/cmip_F_pr_spread_'+seas+'.png',bbox_inches='tight',dpi=300)
 plt.show()
 plt.clf()
+
+
+#%%
+
+#Use the same plotting routine as above but plot the spread (std dev) of the 
+#distribution of model futures
+
+ax = plt.axes()
+cmipH.plot.hist(bins=60,density=True,label='Historical 1980-2015')
+cmipF.plot.hist(bins=60,alpha=0.5,density=True,label='SP585 2066-2100')
+ax.legend()
+ax.yaxis.set_major_formatter(PercentFormatter(xmax=1))
+ax.set_xlabel('monthly rainfall (rate mm/day)')
+ax.set_ylabel('percent of total events in the period')
+plt.savefig('../plots/cmip_pr_dist_'+seas+'.png',bbox_inches='tight',dpi=300)
+plt.show()
+plt.clf()
+
+
+
+#%%
+#Use the same plotting routine as above but plot timeseries of SP585 rainfall rates
+#to the end of the century
+
+fig, ax = plt.subplots(figsize=(10, 5))
+for m in cmipF.model.values:
+    print(m)
+    seas_tl = cmipF.sel(model=m).mean(dim=('lat','lon'))
+    seas_tl = seas_tl.groupby('time.year').mean('time')
+    trend = stats.linregress(seas_tl.year.values, seas_tl.values)
+    slope = trend[0]
+    seas_tl.plot(label=m+' ('+'{:.2f}'.format(slope)+'(mm/day)/year)')
+ax.legend(fontsize=8)
+ax.set_xlabel('Year')
+ax.set_ylabel('Rainfall rate (mm/day)')
+ax.set_title('TRainfall trend')
+plt.savefig('../plots/cmip_pr_tseries_'+seas+'.png',bbox_inches='tight',dpi=300)
+plt.show()
+plt.clf()
+
 

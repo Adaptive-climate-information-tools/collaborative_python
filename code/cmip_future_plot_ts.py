@@ -1,12 +1,13 @@
 #%%
 #Read in all the packages you need. 
 #For this code all of the packages below are needed
-#import sys
+import sys
 import os
 import glob
 import xarray as xr
 import pandas as pd
 import numpy as np
+from scipy import stats
 from matplotlib import pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature
@@ -16,6 +17,7 @@ mpl.rcParams['legend.fontsize'] = 10
 mpl.rcParams['figure.titlesize'] = 10
 import matplotlib.ticker as mticker
 from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+from matplotlib.ticker import PercentFormatter
 
 #We will be taking a difference between future and historical time slices (slices
 #of time that are the same length) so we will open each of these sets of model 
@@ -79,6 +81,7 @@ filename = 'ts_Amon_*'
 list_f = glob.glob(os.path.join(path,filename))
 
 chl = []
+#daterange = pd.date_range(start='2015-01-01', end='2099-12-31', freq='MS')
 daterange = pd.date_range(start='2066-01-01', end='2099-12-31', freq='MS')
 for m in list_f:
     try:
@@ -87,6 +90,7 @@ for m in list_f:
         inH = xr.open_dataset(m)['ts']-273
         inH = inH.resample(time="MS").mean()
         inH = inH.sel(time=slice('2066-01-01','2099-12-31'))
+        #inH = inH.sel(time=slice('2015-01-01','2099-12-31'))
         inH = inH.expand_dims(dim="model")
         inH = inH.assign_coords(model=('model',[mname]))
         inH['time'] = daterange
@@ -262,4 +266,46 @@ plt.text(22,-13, '$^\circ$C', dict(size=11))
 plt.savefig('cmip_F_ts_spread_'+seas+'.png',bbox_inches='tight',dpi=300)
 plt.show()
 plt.clf()
+
+
+
+#%%
+
+#Use the same plotting routine as above but plot the spread (std dev) of the 
+#distribution of model futures
+
+ax = plt.axes()
+cmipH.plot.hist(bins=60,density=True,label='Historical 1980-2015')
+cmipF.plot.hist(bins=60,alpha=0.5,density=True,label='SP585 2066-2100')
+ax.legend()
+ax.yaxis.set_major_formatter(PercentFormatter(xmax=1))
+ax.set_xlabel('monthly temperature $^\circ$C')
+ax.set_ylabel('percent of total events in the period')
+plt.savefig('../plots/cmip_ts_dist_'+seas+'.png',bbox_inches='tight',dpi=300)
+plt.show()
+plt.clf()
+
+
+#%%
+
+#Use the same plotting routine as above but plot timeseries of SP585 temperatures
+#to the end of the century
+
+fig, ax = plt.subplots(figsize=(10, 5))
+for m in cmipF.model.values:
+    print(m)
+    seas_tl = cmipF.sel(model=m).mean(dim=('lat','lon'))
+    seas_tl = seas_tl.groupby('time.year').mean('time')
+    trend = stats.linregress(seas_tl.year.values, seas_tl.values)
+    slope = trend[0]
+    seas_tl.plot(label=m+' ('+'{:.2f}'.format(slope)+'$^\circ$C/year)')
+ax.legend(fontsize=8)
+ax.set_xlabel('Year')
+ax.set_ylabel('Temperature $^\circ$C')
+ax.set_title('Temperature trend')
+plt.savefig('../plots/cmip_ts_tseries_'+seas+'.png',bbox_inches='tight',dpi=300)
+plt.show()
+plt.clf()
+
+
 
